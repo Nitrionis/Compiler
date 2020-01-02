@@ -30,11 +30,14 @@ namespace Lexer
 
 		private void ActionSetStartState() => activeState = State.Start;
 
+		/// <summary>
+		/// Also add char to token.
+		/// </summary>
 		private void SetState(State state, Token.Types type, bool updateLocation)
 		{
 			activeState = state;
 			token.Type = type;
-			token.RawValue += ((char)stream.Symbol).ToString();
+			ActionAddCharToToken();
 			if (updateLocation) {
 				UpdateTokenLocation();
 			}

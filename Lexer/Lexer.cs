@@ -46,6 +46,7 @@ namespace Lexer
 			Division,
 			Comment,
 			ConstString,
+			EscapeSequence,
 			Ampersand,
 			Pipe,
 			Minus,

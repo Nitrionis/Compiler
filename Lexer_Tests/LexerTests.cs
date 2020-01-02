@@ -500,6 +500,24 @@ namespace LexerTests
 			).Execute().IsDone);
 		}
 
+		[TestMethod]
+		public void Test_55()
+		{
+			Assert.IsTrue(new Test(
+				"\"a\nb\"", 
+				new[]{ new Token(Token.Types.String, "a\nb", "\"a\nb\"", 0, 0) }
+			).Execute().IsDone);
+		}
+
+		[TestMethod]
+		public void Test_56()
+		{
+			Assert.IsTrue(new Test(
+				"\"a\n\nb\"", 
+				new[]{ new Token(Token.Types.String, "a\n\nb", "\"a\n\nb\"", 0, 0) }
+			).Execute().IsDone);
+		}
+
 		private struct Test
 		{
 			public struct Result
