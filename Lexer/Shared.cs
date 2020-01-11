@@ -71,6 +71,7 @@
 		CloseSquareBracket		= 1ul << 30 | Primary,
 		Dot						= 1ul << 31 | Primary,
 		Comma					= 1ul << 32,
-		SemiColon				= 1ul << 33
+		SemiColon				= 1ul << 33,
+		Colon					= 1ul << 34
 	}
 }

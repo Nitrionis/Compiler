@@ -53,6 +53,7 @@ namespace ParserTests
 		[TestMethod] public void Test_35() => Run(35);
 		[TestMethod] public void Test_36() => Run(36);
 		[TestMethod] public void Test_37() => Run(37);
+		[TestMethod] public void Test_38() => Run(38);
 
 		private void Run(int testIndex)
 		{

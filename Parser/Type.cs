@@ -63,7 +63,7 @@ namespace Parser
 		}
 
 		public readonly string Name;
-		public readonly Dictionary<string, FieldInfo> Fields;
+		public readonly Dictionary<string, IVariable> Fields;
 		public readonly Dictionary<string, MethodInfo> Methods;
 		public readonly bool IsArithmetical;
 		public readonly bool IsBoolean;
@@ -74,7 +74,7 @@ namespace Parser
 		public TypeInfo(string name, bool isArithmetical, bool isBoolean, object defaultValue = null)
 		{
 			Name = name;
-			Fields = new Dictionary<string, FieldInfo>();
+			Fields = new Dictionary<string, IVariable>();
 			Methods = new Dictionary<string, MethodInfo>();
 			IsArithmetical = isArithmetical;
 			IsBoolean = isBoolean;

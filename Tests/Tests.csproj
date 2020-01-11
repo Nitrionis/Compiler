@@ -90,6 +90,9 @@
     <Content Include="ParserTests\ParserTest_10.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <Content Include="ParserTests\ParserTest_38.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="ParserTests\ParserTest_37.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>

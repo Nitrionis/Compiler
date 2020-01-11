@@ -312,6 +312,18 @@ namespace Parser
 			foreach (var scope in scopes) {
 				IVariable variableInfo;
 				if (scope.Variables.TryGetValue(identifier, out variableInfo)) {
+					if (scope is TypeDefinition && !((TypeInfo.FieldInfo)variableInfo).IsStatic) {
+						if (CurrentField != null && CurrentField.IsStatic) {
+							throw new ParserException(token, string.Format(
+								"Attempting to access a non-static field '{0}' from static field '{1}' initializer",
+								variableInfo.Name, CurrentField.Name));
+						}
+						if (CurrentMethod != null && CurrentMethod.IsStatic) {
+							throw new ParserException(token, string.Format(
+								"Attempting to access a non-static field '{0}' from a static method '{1}'",
+								variableInfo.Name, CurrentMethod.Name));
+						}
+					}
 					return new VariableReference(variableInfo);
 				}
 			}

@@ -25,7 +25,7 @@ namespace Lexer
 			startActions[0x2e /* . */] = () => ActionOneSymbolOperator(Operator.Dot);
 			startActions[0x2f /* / */] = () => SetState(State.Division, Token.Types.Operator, updateLocation: true);
 			SetActionsRange(startActions, ActionSetIntState, 0x30, 10); // 0 1 2 ...
-			startActions[0x3a /* : */] = ActionErrorSymbol;
+			startActions[0x3a /* : */] = () => ActionOneSymbolOperator(Operator.Colon);
 			startActions[0x3b /* ; */] = () => ActionOneSymbolOperator(Operator.SemiColon);
 			startActions[0x3c /* < */] = () => ActionOneSymbolOperator(Operator.LessTest);
 			startActions[0x3d /* = */] = () => SetState(State.Equals, Token.Types.Operator, updateLocation: true);

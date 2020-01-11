@@ -56,13 +56,9 @@ namespace Parser
 	public class TypeDefinition : Node, IScope
 	{
 		public readonly TypeInfo TypeInfo;
-		public Dictionary<string, IVariable> Variables { get; }
+		public Dictionary<string, IVariable> Variables => TypeInfo.Fields;
 
-		public TypeDefinition(TypeInfo typeInfo)
-		{
-			TypeInfo = typeInfo;
-			Variables = new Dictionary<string, IVariable>();
-		}
+		public TypeDefinition(TypeInfo typeInfo) => TypeInfo = typeInfo;
 
 		public override string ToString(string indent, bool last)
 		{
@@ -417,10 +413,10 @@ namespace Parser
 				throw new ParserException("Arrays have no fields and methods");
 			}
 			bool isStatic = false;
-			TypeInfo.FieldInfo fieldInfo;
+			IVariable fieldInfo;
 			if (type.Info.Fields.TryGetValue(MemberName, out fieldInfo)) {
 				Info = fieldInfo;
-				isStatic = fieldInfo.IsStatic;
+				isStatic = ((TypeInfo.FieldInfo)fieldInfo).IsStatic;
 			}
 			TypeInfo.MethodInfo methodInfo;
 			if (type.Info.Methods.TryGetValue(MemberName, out methodInfo)) {

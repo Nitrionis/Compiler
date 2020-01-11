@@ -8,6 +8,7 @@ namespace Parser
 	public partial class Parser
 	{
 		private TypeInfo CurrentType;
+		private TypeInfo.FieldInfo CurrentField;
 		private TypeInfo.MethodInfo CurrentMethod;
 
 		private Node ParseClass()
@@ -96,7 +97,10 @@ namespace Parser
 			if (type.Info == Type.VoidTypeInfo) {
 				throw new ParserException("Cannot create a field of type void");
 			}
+			var fieldInfo = new TypeInfo.FieldInfo(type, identifier, isStatic);
+			CurrentField = fieldInfo;
 			var initializer = ParseExpression();
+			CurrentField = null;
 			if (initializer == null) {
 				initializer = new Literal(type, type.DefaultValue());
 			}
@@ -108,7 +112,6 @@ namespace Parser
 				throw new WrongTokenFound(token, ";");
 			}
 			NextTokenThrowIfFailed();
-			var fieldInfo = new TypeInfo.FieldInfo(type, identifier, isStatic);
 			CurrentType.Fields.Add(identifier, fieldInfo);
 			return new FieldDefinition(fieldInfo, initializer);
 		}
