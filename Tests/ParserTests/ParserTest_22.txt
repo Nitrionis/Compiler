@@ -1,0 +1,17 @@
+﻿public class Program
+{
+	public void Main1()
+	{
+		bool i = true < false;
+	}
+
+	public static void Main2()
+	{
+		bool i = true < false;
+	}
+
+	public static void Main()
+	{
+		bool i = true < false;
+	}
+}

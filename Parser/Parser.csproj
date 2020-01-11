@@ -64,7 +64,9 @@
     <Compile Include="Exceptions.cs" />
     <Compile Include="Node.cs" />
     <Compile Include="Parser.cs" />
+    <Compile Include="ParserDefinition.cs" />
     <Compile Include="ParserExpression.cs" />
+    <Compile Include="ParserStatement.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Type.cs" />
   </ItemGroup>

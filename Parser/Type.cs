@@ -5,20 +5,38 @@ using System.Collections.Generic;
 
 namespace Parser
 {
+	public interface ITypeProvider
+	{
+		Type Type { get; }
+	}
+
+	public interface IVariable : ITypeProvider
+	{
+		string Name { get; }
+	}
+
 	public class TypeInfo
 	{
-		public class FieldInfo
+		public class FieldInfo : IVariable
 		{
-			public readonly Type Type;
-			public readonly string Name;
+			public Type Type { get; }
+			public string Name { get; }
+			public bool IsStatic { get; }
+
+			public FieldInfo(Type type, string name, bool isStatic)
+			{
+				Type = type;
+				Name = name;
+				IsStatic = isStatic;
+			}
 		}
 
-		public class MethodInfo
+		public class MethodInfo : IVariable
 		{
-			public class PramsInfo
+			public class PramsInfo : IVariable
 			{
-				public readonly Type Type;
-				public readonly string Name;
+				public Type Type { get; }
+				public string Name { get; }
 
 				public PramsInfo(Type type, string name)
 				{
@@ -32,10 +50,14 @@ namespace Parser
 			public readonly string Name;
 			public readonly List<PramsInfo> Prams;
 
-			public MethodInfo(Type outputType, string name, List<PramsInfo> prams = null)
+			string IVariable.Name => Name;
+			Type ITypeProvider.Type => OutputType;
+
+			public MethodInfo(Type outputType, string name, bool isStatic, List<PramsInfo> prams = null)
 			{
 				OutputType = outputType;
 				Name = name;
+				IsStatic = isStatic;
 				Prams = prams ?? new List<PramsInfo>();
 			}
 		}
@@ -43,12 +65,20 @@ namespace Parser
 		public readonly string Name;
 		public readonly Dictionary<string, FieldInfo> Fields;
 		public readonly Dictionary<string, MethodInfo> Methods;
+		public readonly bool IsArithmetical;
+		public readonly bool IsBoolean;
+		public readonly object DefaultValue;
 
-		public TypeInfo(string name)
+		public bool IsReference => DefaultValue == null;
+
+		public TypeInfo(string name, bool isArithmetical, bool isBoolean, object defaultValue = null)
 		{
 			Name = name;
 			Fields = new Dictionary<string, FieldInfo>();
 			Methods = new Dictionary<string, MethodInfo>();
+			IsArithmetical = isArithmetical;
+			IsBoolean = isBoolean;
+			DefaultValue = defaultValue;
 		}
 
 		public bool ContainsMember(string identifier) =>
@@ -59,12 +89,12 @@ namespace Parser
 	{
 		public static readonly Dictionary<string, TypeInfo> Predefined;
 
-		public static readonly TypeInfo VoidTypeInfo	= new TypeInfo("void");
-		public static readonly TypeInfo BoolTypeInfo	= new TypeInfo("bool");
-		public static readonly TypeInfo CharTypeInfo	= new TypeInfo("char");
-		public static readonly TypeInfo IntTypeInfo		= new TypeInfo("int");
-		public static readonly TypeInfo FloatTypeInfo	= new TypeInfo("float");
-		public static readonly TypeInfo StringTypeInfo	= new TypeInfo("string");
+		public static readonly TypeInfo VoidTypeInfo	= new TypeInfo("void", false, false, null);
+		public static readonly TypeInfo BoolTypeInfo	= new TypeInfo("bool", false, true, false);
+		public static readonly TypeInfo CharTypeInfo	= new TypeInfo("char", false, false, (char)0);
+		public static readonly TypeInfo IntTypeInfo		= new TypeInfo("int", true, false, (int)0);
+		public static readonly TypeInfo FloatTypeInfo	= new TypeInfo("float", true, false, (float)0.0f);
+		public static readonly TypeInfo StringTypeInfo	= new TypeInfo("string", false, false, null);
 
 		public readonly TypeInfo Info;
 		public readonly uint ArrayRang;
@@ -78,8 +108,12 @@ namespace Parser
 		public override bool Equals(object obj)
 		{
 			var other = (Type)obj;
-			return ReferenceEquals(Info, other.Info) && ArrayRang == other.ArrayRang;
+			return obj == null ? false : ReferenceEquals(Info, other.Info) && ArrayRang == other.ArrayRang;
 		}
+
+		public bool IsReference() => Info.IsReference || ArrayRang > 0;
+
+		public object DefaultValue() => ArrayRang > 0 ? null : Info.DefaultValue;
 
 		static Type()
 		{
@@ -113,19 +147,6 @@ namespace Parser
 				case Token.Types.String: return new Type(StringTypeInfo);
 				default: throw new InvalidOperationException();
 			}
-		}
-	}
-
-	public class VariableInfo
-	{
-		public readonly Type Type;
-		public readonly string Name;
-		public object Value;
-
-		public VariableInfo(Type type, string name)
-		{
-			Type = type;
-			Name = name;
 		}
 	}
 }

@@ -18,13 +18,6 @@ namespace Parser
 			this.lexer = lexer;
 			foreseeableFuture = new Stack<Token>();
 			Types = new Dictionary<string, TypeInfo>(Type.Predefined);
-
-			// todo
-			NextTokenThrowIfFailed();
-			var exception = ParseExpression();
-			if (exception != null) {
-				System.Console.WriteLine(exception.ToString());
-			}
 		}
 
 		public Parser(string path) : this(new Lexer(path)) {  }
@@ -51,21 +44,20 @@ namespace Parser
 				foreseeableFuture.Pop();
 				token = foreseeableFuture.Count == 0 ? lexer.Peek() : foreseeableFuture.Peek();
 			}
-			return token == null ? null : token.IsError ?
-				throw new LexerException("Lexical analysis failed.") : token;
+			return token == null ? null : !token.IsError ? token :
+				throw new LexerException(string.Format("Lexical analysis failed token {0}", token.ToString()));
 		}
 
-		public Token PeekAndNext()
+		/// <summary>
+		/// Our whole program consists of several classes.
+		/// </summary>
+		public List<Node> ParseProgram()
 		{
-			var t = PeekToken();
-			NextToken();
-			return t;
-		}
-
-		public Token NextAndPeek()
-		{
-			NextToken();
-			return PeekToken();
+			var nodes = new List<Node>();
+			while (NextToken()) {
+				nodes.Add(ParseClass());
+			}
+			return nodes;
 		}
 	}
 }

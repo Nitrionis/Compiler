@@ -34,7 +34,7 @@ namespace Lexer
 			SetActionsRange(intActions, ActionErrorSymbol, 0x61, 26); // a b c ...
 			SetActionsRange(intActions, ActionErrorSymbol, 0x21, 4); // ! " # $
 			SetActionsRange(intActions, ActionErrorSymbol, 0x27, 2); // ' (
-			intActions[0x2c /* , */] = ActionErrorSymbol;
+			//intActions[0x2c /* , */] = ActionErrorSymbol;
 			intActions[0x2e /* . */] = () => SetState(State.Float, Token.Types.Float, updateLocation: false);
 			intActions[0x3a /* : */] = ActionErrorSymbol;
 			SetActionsRange(intActions, ActionErrorSymbol, 0x3e, 3); // > ? @

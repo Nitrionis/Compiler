@@ -1,0 +1,17 @@
+﻿public class Test
+{
+	public float f = 0.0;
+
+	public void Main()
+	{
+		
+	}
+}
+
+public class Program
+{
+	public static void Main()
+	{
+		
+	}
+}

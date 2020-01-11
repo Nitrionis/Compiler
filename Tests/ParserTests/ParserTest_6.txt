@@ -1,0 +1,7 @@
+﻿public class Program
+{
+	public static void Main() { }
+	public static void Main1() { }
+	public void Main2() { }
+	public void Main3() { }
+}

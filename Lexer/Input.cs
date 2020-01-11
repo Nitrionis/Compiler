@@ -10,8 +10,8 @@ namespace Lexer
 		public bool NeedNextSymbol { get; set; } = true;
 		public int Symbol { get; private set; } = -1;
 		public int PrevRowSize { get; private set; }
-		public int RowIndex { get; private set; } = 0;
-		public int ColIndex { get; private set; } = -1;
+		public int RowIndex { get; private set; } = 1;
+		public int ColIndex { get; private set; } = 0;
 
 		public Input(string path) => reader = new StreamReader(path);
 		public Input(Stream stream) => reader = new StreamReader(stream);
@@ -38,17 +38,19 @@ namespace Lexer
 		{
 			if (NeedNextSymbol) {
 				Symbol = reader.Read();
-				CheckLineFeed();
+				CheckLineFeedOrTab();
 			}
 			NeedNextSymbol = true;
 			return Symbol;
 		}
 
-		private void CheckLineFeed()
+		private void CheckLineFeedOrTab()
 		{
 			if (Symbol == '\n') {
-				ColIndex = -1;
+				ColIndex = 0;
 				RowIndex++;
+			} else if (Symbol == '\t') {
+				ColIndex += 4;
 			} else {
 				ColIndex++;
 			}

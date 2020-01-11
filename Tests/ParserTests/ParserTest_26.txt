@@ -1,0 +1,15 @@
+﻿public class Test
+{
+	public static void StaticMain()
+	{
+		
+	}
+}
+
+public class Program
+{
+	public static void Main()
+	{
+		Test.StaticMain();
+	}
+}

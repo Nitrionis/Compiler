@@ -7,16 +7,16 @@ namespace Lexer
 		[Flags]
 		public enum Types
 		{
-			Undefined	= 1,
-			Identifier	= 2,
-			Keyword		= 3,
-			Operator	= 4,
-			Literal		= 128,
-			String		= 5 | Literal,
-			Int			= 6 | Literal,
-			Float		= 7 | Literal,
-			Char		= 8 | Literal,
-			Eof			= 9
+			Undefined	= 1 << 1,
+			Identifier	= 1 << 2,
+			Keyword		= 1 << 3,
+			Operator	= 1 << 4,
+			Literal		= 1 << 5,
+			String		= 1 << 6 | Literal,
+			Int			= 1 << 7 | Literal,
+			Float		= 1 << 8 | Literal,
+			Char		= 1 << 9 | Literal,
+			Eof			= 1 << 10
 		}
 
 		public Types Type = Types.Undefined;

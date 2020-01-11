@@ -29,12 +29,14 @@ namespace Lexer
 				["true"]	= Keyword.True,
 				["false"]	= Keyword.False,
 				["if"]		= Keyword.If,
+				["else"]	= Keyword.Else,
 				["for"]		= Keyword.For,
 				["while"]	= Keyword.While,
 				["class"]	= Keyword.Class,
 				["return"]	= Keyword.Return,
 				["break"]	= Keyword.Break,
 				["public"]	= Keyword.Public,
+				["static"]	= Keyword.Static,
 				["new"]		= Keyword.New,
 				["null"]	= Keyword.Null
 			};

@@ -1,0 +1,10 @@
+﻿public class Program
+{
+	public static int[] GetArray(int i, float f){
+		return new int[2] { i, (int)f };
+	}
+
+	public static void Main() {
+		int[] arr = GetArray(1, 2.0);
+	}
+}

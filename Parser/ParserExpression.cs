@@ -13,13 +13,18 @@ namespace Parser
 
 		private Expression ParseAssignment() // _ = _
 		{
+			var token = PeekToken();
 			var left = ParseConditionalOrExpression();
 			if (left == null) return null;
-			var token = PeekToken();
+			token = PeekToken();
 			if (token == null ||
 				!((token.Type == Token.Types.Operator) &&
-				 ((Operator)token.Value == Operator.Assignment))) {
+				 ((Operator)token.Value == Operator.Assignment))) 
+			{
 				return left;
+			}
+			if (!(left is IValue value && value.IsVariable)) {
+				throw new ParserException(token, "Wrong assignment target");
 			}
 			NextTokenThrowIfFailed();
 			var right = ParseAssignment();
@@ -28,19 +33,19 @@ namespace Parser
 		}
 
 		private static bool IsOperator(Token token, Operator @operator) =>
-			token.Type == Token.Types.Operator && ((Operator)token.Value & @operator) == @operator;
+			token.Type == Token.Types.Operator && ((Operator)token.Value).HasFlag(@operator);
 
 		private Expression ParseBinaryLeftAssociativeOperation(
-			Operator @operator, ParseExpressionHandle ParseDeeperExpression)
+			Operator @operator, ParseExpressionHandle ParseMorePriorityExpression)
 		{
-			var left = ParseDeeperExpression();
+			var left = ParseMorePriorityExpression();
 			while (left != null) {
 				var token = PeekToken();
-				if (token == null || !IsOperator(token, @operator)) {
+				if (!IsOperator(token, @operator)) {
 					break;
 				}
 				NextTokenThrowIfFailed();
-				var right = ParseDeeperExpression();
+				var right = ParseMorePriorityExpression();
 				left = new BinaryOperation(token, left, right);
 			}
 			return left;
@@ -60,55 +65,63 @@ namespace Parser
 		private Expression ParseUnaryExpression()  // +_ -_ !_ ~_ (Type)_
 		{
 			var token = PeekToken();
-			if (token == null) return null;
 			if (IsOperator(token, Operator.UnaryOperator)) {
 				NextTokenThrowIfFailed();
 				return new UnaryOperation(token, ParseUnaryExpression());
 			}
 			if (IsOperator(token, Operator.OpenParenthesis)) {
-				var expression = ParsePrimaryExpression();
-				if (expression is Parenthesis parenthesis) {
-					var typeReference = parenthesis.Children[0] as TypeReference;
-					if (typeReference != null) {
+				var openParenthesis = token;
+				var typeName = NextTokenThrowIfFailed();
+				TypeInfo typeInfo = null;
+				if (IsTypeName(typeName, ref typeInfo)) {
+					var closeParenthesis = NextTokenThrowIfFailed();
+					if (IsOperator(closeParenthesis, Operator.CloseParenthesis)) {
 						NextTokenThrowIfFailed();
-						return new TypeCast(typeReference.TypeInfo, ParseUnaryExpression());
+						return new TypeCast(new Type(typeInfo), ParseUnaryExpression());
 					}
+					foreseeableFuture.Push(typeName);
 				}
-				return expression;
+				foreseeableFuture.Push(openParenthesis);
 			}
 			return ParseArrayCreationExpression();
 		}
 
-		private bool IsTypeName(Token token) =>
-			token.Type == Token.Types.Identifier && Types.ContainsKey((string)token.Value) ||
-			token.Type == Token.Types.Keyword && ((Keyword)token.Value & Keyword.Type) != 0;
+		private bool IsTypeName(Token token, ref TypeInfo typeInfo) => (
+				token.Type == Token.Types.Identifier || 
+				token.Type == Token.Types.Keyword && ((Keyword)token.Value).HasFlag(Keyword.Type)
+			) && Types.TryGetValue(token.RawValue, out typeInfo);
 
 		private Expression ParseArrayCreationExpression()
 		{
 			var token = PeekToken();
-			if (token != null && token.Type == Token.Types.Keyword && (Keyword)token.Value == Keyword.New) {
-				var typeName = NextTokenThrowIfFailed();
-				if (IsTypeName(typeName)) {
+			if (token.Type == Token.Types.Keyword && (Keyword)token.Value == Keyword.New) {
+				var typeNameToken = NextTokenThrowIfFailed();
+				TypeInfo typeInfo = null;
+				if (IsTypeName(typeNameToken, ref typeInfo)) {
 					var openSquareBracket = NextTokenThrowIfFailed();
 					if (IsOperator(openSquareBracket, Operator.OpenSquareBracket)) {
-						NextToken();
-						var size = ParseExpression();
-						token = PeekToken();
-						if (size == null) {
+						token = NextTokenThrowIfFailed();
+						var sizeExpression = ParseExpression();
+						if (sizeExpression == null) {
 							throw new ParserException(string.Format(
 								"(r:{0}, c:{1}) Syntax error: array size not set",
 								token.RowIndex, token.ColIndex));
 						}
+						token = PeekToken();
 						if (!IsOperator(token, Operator.CloseSquareBracket)) {
 							throw new WrongTokenFound(token, "]");
 						}
-						uint rang = ParseArrayRang();
-						var data = ParseArrayData();
-						var type = typeName.Type == Token.Types.Keyword ?
-							Type.Of(typeName) : new Type(Types[(string)typeName.Value], rang);
-						return new ArrayCreation(type, size, data);
+						NextTokenThrowIfFailed();
+						uint arrayRang = 1 + ParseArrayRang();
+						if (!IsOperator(PeekToken(), Operator.OpenCurlyBrace)) {
+							throw new WrongTokenFound(token, "{");
+						}
+						return new ArrayCreation(
+							type: new Type(typeInfo, arrayRang),
+							size: sizeExpression,
+							data: ParseArrayData());
 					}
-					foreseeableFuture.Push(typeName);
+					foreseeableFuture.Push(typeNameToken);
 				}
 				foreseeableFuture.Push(token);
 			}
@@ -117,20 +130,16 @@ namespace Parser
 
 		private uint ParseArrayRang()
 		{
-			for (uint rang = 1; true; rang++) {
-				NextTokenThrowIfFailed();
+			for (uint rang = 0; true; rang++) {
 				Token token = PeekToken();
-				if (IsOperator(token, Operator.OpenCurlyBrace)) {
+				if (!IsOperator(token, Operator.OpenSquareBracket)) {
 					return rang;
 				}
-				if (!IsOperator(token, Operator.OpenSquareBracket)) {
-					throw new WrongTokenFound(token, "[");
-				}
-				NextTokenThrowIfFailed();
-				token = PeekToken();
+				token = NextTokenThrowIfFailed();
 				if (!IsOperator(token, Operator.CloseSquareBracket)) {
 					throw new WrongTokenFound(token, "]");
 				}
+				NextTokenThrowIfFailed();
 			}
 		}
 
@@ -176,17 +185,19 @@ namespace Parser
 				case Token.Types.Int:
 				case Token.Types.Float:
 				case Token.Types.Char:
-				case Token.Types.String: NextToken(); return new Literal(token);
+				case Token.Types.String: NextTokenThrowIfFailed(); return new Literal(token);
 				case Token.Types.Keyword:
 					switch ((Keyword)token.Value) {
-						case Keyword.Int:	 NextToken(); return new TypeReference(Type.IntTypeInfo);
-						case Keyword.Float:  NextToken(); return new TypeReference(Type.FloatTypeInfo);
-						case Keyword.Char:	 NextToken(); return new TypeReference(Type.CharTypeInfo);
-						case Keyword.String: NextToken(); return new TypeReference(Type.StringTypeInfo);
-						case Keyword.True:	 NextToken(); return new Literal(new Type(Type.BoolTypeInfo), true);
-						case Keyword.False:  NextToken(); return new Literal(new Type(Type.BoolTypeInfo), false);
-						case Keyword.Null:	 NextToken(); return new Literal(null, null);
+						case Keyword.Int:    NextTokenThrowIfFailed(); return new TypeReference(Type.IntTypeInfo);
+						case Keyword.Float:  NextTokenThrowIfFailed(); return new TypeReference(Type.FloatTypeInfo);
+						case Keyword.Char:   NextTokenThrowIfFailed(); return new TypeReference(Type.CharTypeInfo);
+						case Keyword.String: NextTokenThrowIfFailed(); return new TypeReference(Type.StringTypeInfo);
+						case Keyword.Bool:	 NextTokenThrowIfFailed(); return new TypeReference(Type.BoolTypeInfo);
+						case Keyword.True:   NextTokenThrowIfFailed(); return new Literal(new Type(Type.BoolTypeInfo), true);
+						case Keyword.False:  NextTokenThrowIfFailed(); return new Literal(new Type(Type.BoolTypeInfo), false);
+						case Keyword.Null:   NextTokenThrowIfFailed(); return new Literal(null, null);
 						case Keyword.New:	 return ParseObjectCreationExpression(previousExpression);
+						case Keyword.Return: return null;
 						default:             throw new ParserException(string.Format(
 												"(r:{0}, c:{1}) Syntax error: bad keyword '{2}'",
 												token.RowIndex, token.ColIndex, token.RawValue));
@@ -221,6 +232,7 @@ namespace Parser
 			if (!IsOperator(token, Operator.CloseParenthesis)) {
 				throw new WrongTokenFound(token, ")");
 			}
+			NextTokenThrowIfFailed();
 			return new Parenthesis(expression);
 		}
 
@@ -230,7 +242,10 @@ namespace Parser
 			var parameters = new List<Expression>();
 			while (true) {
 				NextTokenThrowIfFailed();
-				parameters.Add(ParseExpression());
+				var expression = ParseExpression();
+				if (expression != null) {
+					parameters.Add(expression);
+				}
 				token = PeekToken();
 				if (!IsOperator(token, Operator.Comma)) {
 					break;
@@ -240,7 +255,7 @@ namespace Parser
 				throw new WrongTokenFound(token, ")");
 			}
 			NextTokenThrowIfFailed();
-			return new Invocation(parameters, previousExpression);
+			return new Invocation(parameters, previousExpression, CurrentMethod);
 		}
 
 		private Expression ParseArrayAccess(Expression previousExpression)
@@ -269,7 +284,7 @@ namespace Parser
 		{
 			var token = NextTokenThrowIfFailed();
 			TypeInfo type;
-			if (token.Type == Token.Types.Keyword && ((Keyword)token.Value & Keyword.Type) != 0) {
+			if (token.Type == Token.Types.Keyword && ((Keyword)token.Value).HasFlag(Keyword.Type)) {
 				type = Type.Of(token).Info;
 			} else if (token.Type != Token.Types.Identifier) {
 				throw new WrongTokenFound(token, "identifier");
@@ -288,11 +303,23 @@ namespace Parser
 		private Expression ParseReference(Expression previousExpression)
 		{
 			var token = PeekToken();
-			NextToken();
+			NextTokenThrowIfFailed();
+			var identifier = (string)token.Value;
 			TypeInfo typeInfo;
-			return Types.TryGetValue((string)token.Value, out typeInfo) ?
-				(Expression)new TypeReference(typeInfo) :
-				(Expression)new VariableOrMemberReference((string)token.Value);
+			if (Types.TryGetValue(identifier, out typeInfo)) {
+				return new TypeReference(typeInfo);
+			}
+			foreach (var scope in scopes) {
+				IVariable variableInfo;
+				if (scope.Variables.TryGetValue(identifier, out variableInfo)) {
+					return new VariableReference(variableInfo);
+				}
+			}
+			TypeInfo.MethodInfo method;
+			if (CurrentType.Methods.TryGetValue(identifier, out method)) {
+				return new MethodReference(method);
+			}
+			throw new ParserException(string.Format("Unknown identifier: {0}", identifier ?? "Null"));
 		}
 	}
 }
