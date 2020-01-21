@@ -1,0 +1,6 @@
+public class Test {
+	public void Foo() {
+		int[] arr;
+		int[] arr2 = null;
+	}
+}

@@ -1,0 +1,19 @@
+public class One {
+	public int Foo() { return 0; }
+	public static int FooStatic() { return 0; }
+	public static int staticC;
+}
+
+public class Program
+{
+	public static int a;
+	public int b;
+
+	public void Foo() {
+		a = One.FooStatic();
+		a = One.staticC;
+		One o = new One();
+		a = o.FooStatic();
+		b = o.Foo();
+	}
+}

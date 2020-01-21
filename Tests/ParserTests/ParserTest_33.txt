@@ -1,9 +1,0 @@
-﻿public class Program
-{
-	public static void Main() {
-		int[] a;
-		int[] b;
-		int[] c = new int[1] { 2 };
-		int d = (a = b = c)[0];
-	}
-}

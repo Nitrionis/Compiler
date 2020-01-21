@@ -1,0 +1,4 @@
+public class Test {
+	public int One() { return 1; }
+	public int Two() { return One(); }
+}

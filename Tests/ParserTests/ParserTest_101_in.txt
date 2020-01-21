@@ -1,0 +1,13 @@
+public class One {}
+
+public class Two {}
+
+public class Test {
+	public void Foo() {
+		bool b;
+		One o = new One();
+		Two t = new Two();
+		b = o == t;
+		b = o != t;
+	}
+}

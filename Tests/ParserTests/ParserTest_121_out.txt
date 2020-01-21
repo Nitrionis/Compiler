@@ -1,0 +1,5 @@
+public class Program
+{
+	public int GetInt() { return 3; }
+	public static int a = GetInt();
+}

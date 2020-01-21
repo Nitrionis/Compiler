@@ -1,0 +1,17 @@
+public class Test {
+	public int Foo() {
+		for (;;) {
+			for (;;) {
+				return 0;
+			}
+			return 0;
+		}
+		while (true) {
+			while (true) {
+				return 0;
+			}
+			return 0;
+		}
+		return 0;
+	}
+}

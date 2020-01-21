@@ -1,0 +1,10 @@
+public class Program
+{
+	public static int a;
+	public static int GetInt() { return 1; }
+
+	public void Foo() {
+		int b = a;
+		int c = GetInt();
+	}
+}

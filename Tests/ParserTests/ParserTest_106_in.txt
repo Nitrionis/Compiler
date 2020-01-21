@@ -1,0 +1,7 @@
+public class Test {
+	public bool GetBool() { return true; }
+
+	public void Foo() {
+		while (true || GetBool()) {}
+	}
+}

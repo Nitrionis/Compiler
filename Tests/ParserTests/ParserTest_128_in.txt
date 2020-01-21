@@ -1,0 +1,10 @@
+public class TestClass {
+	public int a;
+}
+
+public class Program
+{
+	public void Foo() {
+		int a = TestClass.a;
+	}
+}

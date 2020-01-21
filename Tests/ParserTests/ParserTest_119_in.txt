@@ -1,0 +1,5 @@
+public class Program
+{
+	public static int a;
+	public static int b = a;
+}

@@ -1,0 +1,16 @@
+public class Test {
+	public void Foo() {
+		for (;;) {
+			for (;;) {
+				return;
+			}
+			return;
+		}
+		while (true) {
+			while (true) {
+				return;
+			}
+			return;
+		}
+	}
+}

@@ -1,0 +1,11 @@
+public class Test {
+	public void Foo() {
+		while (true) {
+			while (true) {
+				while (true) {
+				
+				}
+			}
+		}
+	}
+}

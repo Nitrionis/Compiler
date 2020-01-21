@@ -1,0 +1,7 @@
+public class Test {
+	public void Foo() {
+		bool b;
+		b = true && false;
+		b = true || false;
+	}
+}

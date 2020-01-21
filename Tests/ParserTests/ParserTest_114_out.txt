@@ -1,0 +1,9 @@
+public class Test {
+	public int Foo() {
+		int i = 0;
+		if (true) {
+			int j = 0;
+		}
+		return 0;
+	}
+}

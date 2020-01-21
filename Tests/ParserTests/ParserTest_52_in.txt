@@ -1,0 +1,6 @@
+public class Test {
+	public void Foo() {
+		int a;
+		int b;
+	}
+}
