@@ -1,4 +1,1 @@
-public class Test {
-	public void a() {}
-	public void a() {}
-}
+(r:3, c:17) identifier 'a' not unique

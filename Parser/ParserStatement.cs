@@ -8,7 +8,7 @@ namespace Parser
 	public partial class Parser
 	{
 		private Stack<IScope> scopes = new Stack<IScope>();
-		private bool isIfStatementOrLoopStatement = false;
+		private int loopDepth = 0;
 
 		private List<Node> ParseStatements()
 		{
@@ -45,8 +45,7 @@ namespace Parser
 		private bool IsKeyword(Token token, Keyword keyword) =>
 			token.Type == Token.Types.Keyword && ((Keyword)token.Value).HasFlag(keyword);
 
-		private bool IsBoolExpression(Expression expression) => 
-			expression.Type.Equals(new Type(Type.BoolTypeInfo));
+		private bool IsBoolExpression(Expression expression) => Type.Equals(expression.Type, Type.BoolTypeInfo);
 
 		private Node ParseSwitchesAndLoops()
 		{
@@ -58,7 +57,7 @@ namespace Parser
 			}
 			token = NextTokenThrowIfFailed();
 			Node node = null;
-			isIfStatementOrLoopStatement = true;
+			++loopDepth;
 			if (keyword.HasFlag(Keyword.If)) {
 				node = ParseIf(token);
 			} else if (keyword.HasFlag(Keyword.For)) {
@@ -66,7 +65,7 @@ namespace Parser
 			} else if (keyword.HasFlag(Keyword.While)) {
 				node = ParseWhile(token);
 			}
-			isIfStatementOrLoopStatement = false;
+			--loopDepth;
 			return node ?? throw new WrongTokenFound(token, "something else");
 		}
 
@@ -113,6 +112,8 @@ namespace Parser
 				} else if (IsOperator(token, Operator.OpenCurlyBrace)) {
 					NextTokenThrowIfFailed();
 					elseStatement = ParseBlock();
+				} else {
+					throw new WrongTokenFound(token, "if' or '{");
 				}
 			}
 			return new If(boolExpression, blockStatement, elseStatement);
@@ -134,7 +135,7 @@ namespace Parser
 				token = NextTokenThrowIfFailed();
 			}
 			var condition = ParseExpression();
-			if (!IsBoolExpression(condition)) {
+			if (condition != null && !IsBoolExpression(condition)) {
 				throw new InvalidExpressionType(token, "bool");
 			}
 			token = PeekToken();
@@ -199,7 +200,7 @@ namespace Parser
 				NextTokenThrowIfFailed();
 				return ParseReturn(token);
 			} else if (IsKeyword(token, Keyword.Break)) {
-				if (!isIfStatementOrLoopStatement) {
+				if (loopDepth == 0) {
 					throw new ParserException(token, "Break out of loops or ifs");
 				}
 				token = NextTokenThrowIfFailed();

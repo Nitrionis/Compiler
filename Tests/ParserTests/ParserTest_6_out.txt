@@ -1,1 +1,1 @@
-public a
+(r:1, c:8) Syntax error: 'class' expected, but 'a' found

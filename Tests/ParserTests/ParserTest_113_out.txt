@@ -1,12 +1,14 @@
-public class Test {
-	public void Foo() {
-		for (;;) {
-			if (true) {
-				for (;;) {
-					int i = 0;
-				}
-			}
-			if (true) {}
-		}
-	}
-}
+└─public class Test
+  └─public void Foo
+    └─for
+      └─{...}
+        ├─if
+        | ├─ Literal True type bool
+        | └─{...}
+        |   └─for
+        |     └─{...}
+        |       └─int i
+        |         └─ Literal 0 type int
+        └─if
+          ├─ Literal True type bool
+          └─{...}

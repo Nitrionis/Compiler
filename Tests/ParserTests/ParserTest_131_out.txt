@@ -1,8 +1,1 @@
-public class Program
-{
-	public int FooTwo() { return 0; }
-
-	public static void Foo() {
-		int a = FooTwo();
-	}
-}
+Method 'FooTwo' is not static in method 'Foo'

@@ -1,3 +1,1 @@
-public class Test {
-	public void Foo(int i) { }
-}
+(r:2, c:24) Method Foo return wrong type: string, but expected int

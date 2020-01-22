@@ -1,5 +1,6 @@
-public class Test {
-	public void Foo() {
-		bool b = true > false;
-	}
-}
+└─public class Test
+  └─public void Foo
+    └─bool b
+      └─ Binary > type bool
+        ├─ Literal True type bool
+        └─ Literal False type bool

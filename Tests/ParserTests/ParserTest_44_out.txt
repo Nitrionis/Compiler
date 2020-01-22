@@ -1,3 +1,4 @@
-public class Test {
-	public void Foo() { return; }
-}
+└─public class Test
+  └─public void Foo
+    ├─return ... type null
+    └─;

@@ -1,5 +1,1 @@
-public class Test {
-	public void Foo() {
-		if (true) {} else }
-	}
-}
+(r:3, c:27) Syntax error: 'if' or '{' expected, but '}' found

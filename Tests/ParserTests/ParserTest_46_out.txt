@@ -1,3 +1,2 @@
-public class Test {
-	public void Foo() { return null; }
-}
+(r:2, c:25) Method Foo return └─ Literal null type null
+, but expected nothing

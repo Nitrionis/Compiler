@@ -1,5 +1,4 @@
-public class Test {
-	public void Foo() {
-		bool b;
-	}
-}
+└─public class Test
+  └─public void Foo
+    └─bool b
+      └─ Literal False type bool

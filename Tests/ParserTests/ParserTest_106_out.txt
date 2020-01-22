@@ -1,7 +1,12 @@
-public class Test {
-	public bool GetBool() { return true; }
-
-	public void Foo() {
-		while (true || GetBool()) {}
-	}
-}
+└─public class Test
+  ├─public bool GetBool
+  | ├─return ... type bool
+  | | └─ Literal True type bool
+  | └─;
+  └─public void Foo
+    └─while
+      ├─ Binary || type bool
+      | ├─ Literal True type bool
+      | └─ () Invocation type bool
+      |   └─ Method bool GetBool
+      └─{...}

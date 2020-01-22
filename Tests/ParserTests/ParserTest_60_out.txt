@@ -1,6 +1,10 @@
-public class Test {
-	public void Foo(int i, float f) {
-		i = 3;
-		f = 3.0;
-	}
-}
+└─public class Test
+  └─public void Foo
+    ├─ Binary = type int
+    | ├─ Variable int i
+    | └─ Literal 3 type int
+    └─;
+    ├─ Binary = type float
+    | ├─ Variable float f
+    | └─ Literal 3 type float
+    └─;

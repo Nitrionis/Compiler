@@ -1,3 +1,1 @@
-public class Test {
-	public int One() {}
-}
+Method Foo without return in the end

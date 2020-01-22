@@ -1,3 +1,1 @@
-public class Test {
-	public void Foo(static) {}
-}
+(r:2, c:21) Syntax error: type 'static' not found

@@ -21,20 +21,27 @@ namespace Parser
 			if (!IsKeyword(token, Keyword.Class)) {
 				throw new WrongTokenFound(token, "class");
 			}
-			token = NextTokenThrowIfFailed();
-			if (token.Type != Token.Types.Identifier) {
-				throw new WrongTokenFound(token, "identifier");
+			var identifier = NextTokenThrowIfFailed();
+			if (identifier.Type != Token.Types.Identifier) {
+				throw new WrongTokenFound(identifier, "identifier");
 			}
 			TypeInfo typeInfo = null;
-			if (IsTypeName(token, ref typeInfo)) {
-				throw new ParserException(token, "Type name is not unique");
+			if (IsTypeName(identifier, ref typeInfo)) {
+				throw new ParserException(identifier, "Type name is not unique");
 			}
-			CurrentType = new TypeInfo((string)token.Value, false, false);
-			Types.Add((string)token.Value, CurrentType);
+			token = NextTokenThrowIfFailed();
+			TypeInfo baseTypeInfo = null;
+			if (IsOperator(token, Operator.Colon)) {
+				token = NextTokenThrowIfFailed();
+				if (!IsTypeName(token, ref baseTypeInfo)) {
+					throw new ParserException(token, "Base type name is unknown");
+				}
+				token = NextTokenThrowIfFailed();
+			}
+			CurrentType = new TypeInfo((string)identifier.Value, false, false, baseTypeInfo);
+			Types.Add((string)identifier.Value, CurrentType);
 			var typeNode = new TypeDefinition(CurrentType);
 			scopes.Push(typeNode);
-
-			token = NextTokenThrowIfFailed();
 			if (!IsOperator(token, Operator.OpenCurlyBrace)) {
 				throw new WrongTokenFound(token, "{");
 			}
@@ -75,31 +82,39 @@ namespace Parser
 			}
 			var identifier = (string)token.Value;
 			if (!IsIdentifierUnique(identifier)) {
-				throw new ParserException(token, string.Format("identifier {0} not unique", identifier));
+				throw new ParserException(token, string.Format("identifier '{0}' not unique", identifier));
 			}
 			token = NextTokenThrowIfFailed();
 			if (IsOperator(token, Operator.OpenParenthesis)) {
 				NextTokenThrowIfFailed();
 				return ParseMethod(type, identifier, isStatic);
 			} else if (IsOperator(token, Operator.Assignment)) {
-				NextTokenThrowIfFailed();
-				return ParseField(type, identifier, isStatic);
+				return ParseField(type, identifier, isStatic, Operator.Assignment);
 			} else if (IsOperator(token, Operator.SemiColon)) {
-				return ParseField(type, identifier, isStatic);
-			}
-			else {
-				throw new WrongTokenFound(token, "( or = or ;");
+				return ParseField(type, identifier, isStatic, Operator.SemiColon);
+			} else {
+				throw new WrongTokenFound(token, "(' or '=' or ';");
 			}
 		}
 
-		private Node ParseField(Type type , string identifier, bool isStatic)
+		private Node ParseField(Type type , string identifier, bool isStatic, Operator prevOperator)
 		{
 			if (type.Info == Type.VoidTypeInfo) {
 				throw new ParserException("Cannot create a field of type void");
 			}
 			var fieldInfo = new TypeInfo.FieldInfo(type, identifier, isStatic);
 			CurrentField = fieldInfo;
-			var initializer = ParseExpression();
+			Expression initializer = null;
+			if (prevOperator == Operator.Assignment) {
+				var exprToken = NextTokenThrowIfFailed();
+				initializer = ParseExpression();
+				if (initializer == null) {
+					throw new ParserException(exprToken, "Expression not recognized");
+				}
+				if (initializer is TypeReference) {
+					throw new ParserException(exprToken, "Type reference cannot be an assignment source");
+				}
+			}
 			CurrentField = null;
 			if (initializer == null) {
 				initializer = new Literal(type, type.DefaultValue());
@@ -119,7 +134,7 @@ namespace Parser
 		private Node ParseMethod(Type type, string identifier, bool isStatic)
 		{
 			var token = PeekToken();
-			var parameters = new List<TypeInfo.MethodInfo.PramsInfo>();
+			var parameters = new List<TypeInfo.MethodInfo.ParamsInfo>();
 			var scope = new Scope();
 			scopes.Push(scope);
 			if (!IsOperator(token, Operator.CloseParenthesis)) {
@@ -135,7 +150,7 @@ namespace Parser
 						throw new ParserException(token, string.Format("identifier {0} not unique", paramName));
 					}
 					// add param to method
-					var pramsInfo = new TypeInfo.MethodInfo.PramsInfo(paramType, paramName);
+					var pramsInfo = new TypeInfo.MethodInfo.ParamsInfo(paramType, paramName);
 					scope.Variables.Add(paramName, pramsInfo);
 					parameters.Add(pramsInfo);
 
@@ -181,7 +196,7 @@ namespace Parser
 					return false;
 				}
 			}
-			return true;
+			return !CurrentType.Methods.ContainsKey(identifier);
 		}
 	}
 }

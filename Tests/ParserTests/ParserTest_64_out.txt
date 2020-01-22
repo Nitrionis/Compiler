@@ -1,7 +1,12 @@
-public class Test {
-	public void Foo() {
-		int i = 3;
-		float f = (float)i;
-		i = (int)f;
-	}
-}
+└─public class Test
+  └─public void Foo
+    ├─int i
+    | └─ Literal 3 type int
+    ├─float f
+    | └─ (float) TypeCast
+    |   └─ Variable int i
+    ├─ Binary = type int
+    | ├─ Variable int i
+    | └─ (int) TypeCast
+    |   └─ Variable float f
+    └─;

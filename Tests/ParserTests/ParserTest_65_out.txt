@@ -1,5 +1,1 @@
-public class Test {
-	public int Foo() {
-		void[] v = null;
-	}
-}
+Cannot create a variable of type void

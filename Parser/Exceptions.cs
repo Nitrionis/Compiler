@@ -29,7 +29,7 @@ namespace Parser
 
 		private static string CreateMessage(Token token) =>
 			string.Format("(r:{0}, c:{1}) Syntax error: type '{2}' not found",
-				token.RowIndex, token.ColIndex, (string)token.Value);
+				token.RowIndex, token.ColIndex, token.RawValue);
 	}
 
 	public class InvalidExpressionsCombination : ParserException

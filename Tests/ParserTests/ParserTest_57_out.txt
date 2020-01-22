@@ -1,4 +1,10 @@
-public class Test {
-	public int One() { return 1; }
-	public int Two() { return One(); }
-}
+└─public class Test
+  ├─public int One
+  | ├─return ... type int
+  | | └─ Literal 1 type int
+  | └─;
+  └─public int Two
+    ├─return ... type int
+    | └─ () Invocation type int
+    |   └─ Method int One
+    └─;

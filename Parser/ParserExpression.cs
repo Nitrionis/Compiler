@@ -9,7 +9,17 @@ namespace Parser
 	{
 		private delegate Expression ParseExpressionHandle();
 
-		private Expression ParseExpression() => ParseAssignment();
+		private Expression ParseExpression()
+		{
+			var token = PeekToken();
+			var expr = ParseExpressionInside();
+			if (expr is TypeReference) {
+				throw new ParserException(token, "Expression cannot consist only of type reference");
+			}
+			return expr;
+		}
+
+		private Expression ParseExpressionInside() => ParseAssignment();
 
 		private Expression ParseAssignment() // _ = _
 		{
@@ -28,6 +38,9 @@ namespace Parser
 			}
 			NextTokenThrowIfFailed();
 			var right = ParseAssignment();
+			if (!Assignment.Can(left.Type, right.Type)) {
+				throw new ParserException(token, "Wrong assignment source");
+			}
 			left = new BinaryOperation(token, left, right);
 			return left;
 		}
@@ -107,11 +120,16 @@ namespace Parser
 								"(r:{0}, c:{1}) Syntax error: array size not set",
 								token.RowIndex, token.ColIndex));
 						}
+						if (!Type.Equals(sizeExpression.Type, Type.IntTypeInfo)) {
+							throw new ParserException(token, string.Format(
+								"ArrayCreation invalid size type '{0}'",
+								Node.TypeToString(sizeExpression.Type)));
+						}
 						token = PeekToken();
 						if (!IsOperator(token, Operator.CloseSquareBracket)) {
 							throw new WrongTokenFound(token, "]");
 						}
-						NextTokenThrowIfFailed();
+						token = NextTokenThrowIfFailed();
 						uint arrayRang = 1 + ParseArrayRang();
 						if (!IsOperator(PeekToken(), Operator.OpenCurlyBrace)) {
 							throw new WrongTokenFound(token, "{");
@@ -119,7 +137,7 @@ namespace Parser
 						return new ArrayCreation(
 							type: new Type(typeInfo, arrayRang),
 							size: sizeExpression,
-							data: ParseArrayData());
+							data: ParseArrayData(new Type(typeInfo, arrayRang - 1)));
 					}
 					foreseeableFuture.Push(typeNameToken);
 				}
@@ -143,14 +161,22 @@ namespace Parser
 			}
 		}
 
-		private List<Expression> ParseArrayData()
+		private List<Expression> ParseArrayData(Type type)
 		{
 			var parameters = new List<Expression>();
 			var token = PeekToken();
 			if (IsOperator(token, Operator.OpenCurlyBrace)) {
 				while (true) {
-					NextTokenThrowIfFailed();
-					parameters.Add(ParseExpression());
+					token = NextTokenThrowIfFailed();
+					var expr = ParseExpression();
+					if (expr == null) {
+						throw new ParserException(token, "ArrayCreation element not recognized");
+					}
+					if (!Assignment.Can(type, expr.Type)) {
+						throw new ParserException(token, string.Format(
+							"ArrayCreation element invalid item type '{0}'", Node.TypeToString(expr.Type)));
+					}
+					parameters.Add(expr);
 					token = PeekToken();
 					if (!IsOperator(token, Operator.Comma)) {
 						break;
@@ -195,7 +221,7 @@ namespace Parser
 						case Keyword.Bool:	 NextTokenThrowIfFailed(); return new TypeReference(Type.BoolTypeInfo);
 						case Keyword.True:   NextTokenThrowIfFailed(); return new Literal(new Type(Type.BoolTypeInfo), true);
 						case Keyword.False:  NextTokenThrowIfFailed(); return new Literal(new Type(Type.BoolTypeInfo), false);
-						case Keyword.Null:   NextTokenThrowIfFailed(); return new Literal(null, null);
+						case Keyword.Null:   NextTokenThrowIfFailed(); return new Literal(new Type(Type.NullTypeInfo), null);
 						case Keyword.New:	 return ParseObjectCreationExpression(previousExpression);
 						case Keyword.Return: return null;
 						default:             throw new ParserException(string.Format(
@@ -227,7 +253,7 @@ namespace Parser
 					"(r:{0}, c:{1}) syntax error: empty parenthesis expression",
 					token.RowIndex, token.ColIndex));
 			}
-			var expression = ParseExpression();
+			var expression = ParseExpressionInside();
 			token = PeekToken();
 			if (!IsOperator(token, Operator.CloseParenthesis)) {
 				throw new WrongTokenFound(token, ")");
@@ -238,6 +264,7 @@ namespace Parser
 
 		private Expression ParseInvocation(Expression previousExpression)
 		{
+			var startToken = PeekToken();
 			Token token;
 			var parameters = new List<Expression>();
 			while (true) {
@@ -255,7 +282,7 @@ namespace Parser
 				throw new WrongTokenFound(token, ")");
 			}
 			NextTokenThrowIfFailed();
-			return new Invocation(parameters, previousExpression, CurrentMethod);
+			return new Invocation(parameters, previousExpression, CurrentMethod, startToken);
 		}
 
 		private Expression ParseArrayAccess(Expression previousExpression)
@@ -312,16 +339,19 @@ namespace Parser
 			foreach (var scope in scopes) {
 				IVariable variableInfo;
 				if (scope.Variables.TryGetValue(identifier, out variableInfo)) {
-					if (scope is TypeDefinition && !((TypeInfo.FieldInfo)variableInfo).IsStatic) {
-						if (CurrentField != null && CurrentField.IsStatic) {
-							throw new ParserException(token, string.Format(
-								"Attempting to access a non-static field '{0}' from static field '{1}' initializer",
-								variableInfo.Name, CurrentField.Name));
-						}
-						if (CurrentMethod != null && CurrentMethod.IsStatic) {
-							throw new ParserException(token, string.Format(
-								"Attempting to access a non-static field '{0}' from a static method '{1}'",
-								variableInfo.Name, CurrentMethod.Name));
+					if (scope is TypeDefinition) {
+						var field = (TypeInfo.FieldInfo)variableInfo;
+						if (!field.IsStatic) {
+							if (CurrentField != null) {
+								throw new ParserException(token, string.Format(
+									"A field '{0}' initializer cannot reference the non-static field '{1}'",
+									CurrentField.Name, variableInfo.Name));
+							}
+							if (CurrentMethod != null && CurrentMethod.IsStatic) {
+								throw new ParserException(token, string.Format(
+									"A method '{0}' initializer cannot reference the non-static field '{1}'",
+									CurrentMethod.Name, variableInfo.Name));
+							}
 						}
 					}
 					return new VariableReference(variableInfo);
@@ -329,6 +359,11 @@ namespace Parser
 			}
 			TypeInfo.MethodInfo method;
 			if (CurrentType.Methods.TryGetValue(identifier, out method)) {
+				if (CurrentField != null && !method.IsStatic) {
+					throw new ParserException(token, string.Format(
+						"A field '{0}' initializer cannot reference the non-static method '{1}'",
+						CurrentField.Name, method.Name));
+				}
 				return new MethodReference(method);
 			}
 			throw new ParserException(string.Format("Unknown identifier: {0}", identifier ?? "Null"));

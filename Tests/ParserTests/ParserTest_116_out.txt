@@ -1,16 +1,20 @@
-public class Test {
-	public void Foo() {
-		for (;;) {
-			for (;;) {
-				break;
-			}
-			break;
-		}
-		while (true) {
-			while (true) {
-				break;
-			}
-			break;
-		}
-	}
-}
+└─public class Test
+  └─public void Foo
+    ├─for
+    | └─{...}
+    |   ├─for
+    |   | └─{...}
+    |   |   └─break
+    |   |   └─;
+    |   └─break
+    |   └─;
+    └─while
+      ├─ Literal True type bool
+      └─{...}
+        ├─while
+        | ├─ Literal True type bool
+        | └─{...}
+        |   └─break
+        |   └─;
+        └─break
+        └─;

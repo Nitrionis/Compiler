@@ -33,12 +33,12 @@ namespace Parser
 
 		public class MethodInfo : IVariable
 		{
-			public class PramsInfo : IVariable
+			public class ParamsInfo : IVariable
 			{
 				public Type Type { get; }
 				public string Name { get; }
 
-				public PramsInfo(Type type, string name)
+				public ParamsInfo(Type type, string name)
 				{
 					Type = type;
 					Name = name;
@@ -48,21 +48,22 @@ namespace Parser
 			public readonly bool IsStatic;
 			public readonly Type OutputType;
 			public readonly string Name;
-			public readonly List<PramsInfo> Prams;
+			public readonly List<ParamsInfo> Prams;
 
 			string IVariable.Name => Name;
 			Type ITypeProvider.Type => OutputType;
 
-			public MethodInfo(Type outputType, string name, bool isStatic, List<PramsInfo> prams = null)
+			public MethodInfo(Type outputType, string name, bool isStatic, List<ParamsInfo> prams = null)
 			{
 				OutputType = outputType;
 				Name = name;
 				IsStatic = isStatic;
-				Prams = prams ?? new List<PramsInfo>();
+				Prams = prams ?? new List<ParamsInfo>();
 			}
 		}
 
 		public readonly string Name;
+		public readonly TypeInfo Parent;
 		public readonly Dictionary<string, IVariable> Fields;
 		public readonly Dictionary<string, MethodInfo> Methods;
 		public readonly bool IsArithmetical;
@@ -71,11 +72,17 @@ namespace Parser
 
 		public bool IsReference => DefaultValue == null;
 
-		public TypeInfo(string name, bool isArithmetical, bool isBoolean, object defaultValue = null)
+		public TypeInfo(string name, bool isArithmetical, bool isBoolean, TypeInfo parent = null, object defaultValue = null)
 		{
 			Name = name;
-			Fields = new Dictionary<string, IVariable>();
-			Methods = new Dictionary<string, MethodInfo>();
+			Parent = parent;
+			if (Parent != null) {
+				Fields = new Dictionary<string, IVariable>(Parent.Fields);
+				Methods = new Dictionary<string, MethodInfo>(Parent.Methods);
+			} else {
+				Fields = new Dictionary<string, IVariable>();
+				Methods = new Dictionary<string, MethodInfo>();
+			}
 			IsArithmetical = isArithmetical;
 			IsBoolean = isBoolean;
 			DefaultValue = defaultValue;
@@ -89,12 +96,13 @@ namespace Parser
 	{
 		public static readonly Dictionary<string, TypeInfo> Predefined;
 
-		public static readonly TypeInfo VoidTypeInfo	= new TypeInfo("void", false, false, null);
-		public static readonly TypeInfo BoolTypeInfo	= new TypeInfo("bool", false, true, false);
-		public static readonly TypeInfo CharTypeInfo	= new TypeInfo("char", false, false, (char)0);
-		public static readonly TypeInfo IntTypeInfo		= new TypeInfo("int", true, false, (int)0);
-		public static readonly TypeInfo FloatTypeInfo	= new TypeInfo("float", true, false, (float)0.0f);
-		public static readonly TypeInfo StringTypeInfo	= new TypeInfo("string", false, false, null);
+		public static readonly TypeInfo NullTypeInfo	= new TypeInfo("null", false, false, null, null);
+		public static readonly TypeInfo VoidTypeInfo	= new TypeInfo("void", false, false, null, null);
+		public static readonly TypeInfo BoolTypeInfo	= new TypeInfo("bool", false, true, null, false);
+		public static readonly TypeInfo CharTypeInfo	= new TypeInfo("char", false, false, null, (char)0);
+		public static readonly TypeInfo IntTypeInfo		= new TypeInfo("int", true, false, null, (int)0);
+		public static readonly TypeInfo FloatTypeInfo	= new TypeInfo("float", true, false, null, (float)0.0f);
+		public static readonly TypeInfo StringTypeInfo	= new TypeInfo("string", false, false, null, null);
 
 		public readonly TypeInfo Info;
 		public readonly uint ArrayRang;
@@ -105,11 +113,14 @@ namespace Parser
 			ArrayRang = arrayRang;
 		}
 
-		public override bool Equals(object obj)
-		{
-			var other = (Type)obj;
-			return obj == null ? false : ReferenceEquals(Info, other.Info) && ArrayRang == other.ArrayRang;
-		}
+		public static bool Equals(Type t1, TypeInfo typeInfo) => 
+			t1.ArrayRang == 0 && ReferenceEquals(t1.Info, typeInfo);
+
+		public static bool Equals(TypeInfo typeInfo, Type t2) => 
+			t2.ArrayRang == 0 && ReferenceEquals(typeInfo, t2.Info);
+
+		public static bool Equals(Type t1, Type t2) => 
+			t1.ArrayRang == t2.ArrayRang && ReferenceEquals(t1.Info, t2.Info);
 
 		public bool IsReference() => Info.IsReference || ArrayRang > 0;
 
@@ -118,6 +129,7 @@ namespace Parser
 		static Type()
 		{
 			Predefined = new Dictionary<string, TypeInfo>() {
+				["null"]	= NullTypeInfo,
 				["void"]	= VoidTypeInfo,
 				["bool"]	= BoolTypeInfo,
 				["char"]	= CharTypeInfo,
@@ -132,6 +144,7 @@ namespace Parser
 			switch (token.Type) {
 				case Token.Types.Keyword:
 					switch ((Keyword)token.Value) {
+						case Keyword.Null: return new Type(NullTypeInfo);
 						case Keyword.Void: return new Type(VoidTypeInfo);
 						case Keyword.True: return new Type(BoolTypeInfo);
 						case Keyword.False: return new Type(BoolTypeInfo);
@@ -148,5 +161,11 @@ namespace Parser
 				default: throw new InvalidOperationException();
 			}
 		}
+	}
+
+	public class Assignment
+	{
+		public static bool Can(Type dst, Type src) => 
+			Type.Equals(dst, src) || dst.IsReference() && Type.Equals(src, Type.NullTypeInfo);
 	}
 }

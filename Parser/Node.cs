@@ -29,7 +29,7 @@ namespace Parser
 			};
 		}
 
-		protected string TypeToString(Type type) => type == null ? "null" :
+		public static string TypeToString(Type type) => type == null ? "null" :
 			type.Info.Name + new StringBuilder().Insert(0, "[]", (int)type.ArrayRang);
 	}
 
@@ -83,7 +83,7 @@ namespace Parser
 			FieldInfo = fieldInfo;
 			Children.Capacity = 1;
 			Children.Add(initializer);
-			if (!initializer.Type.Equals(FieldInfo.Type)) {
+			if (!Assignment.Can(FieldInfo.Type, initializer.Type)) {
 				throw new ParserException(string.Format(
 					"FieldDefinition wrong initializer type: field {0}, initializer {1}",
 					TypeToString(FieldInfo.Type), TypeToString(initializer.Type)));
@@ -131,7 +131,7 @@ namespace Parser
 
 		private void CheckReturns()
 		{
-			bool hasReturn = MethodInfo.OutputType.Equals(new Type(Type.VoidTypeInfo));
+			bool hasReturn = Type.Equals(MethodInfo.OutputType, Type.VoidTypeInfo);
 			if (!hasReturn) {
 				foreach (var node in Children) {
 					hasReturn |= node is Return;
@@ -161,6 +161,10 @@ namespace Parser
 		{
 			Type = new Type(typeInfo);
 			Children = new List<Node>(invocation.Parameters);
+			if (Type.Predefined.ContainsKey(typeInfo.Name)) {
+				throw new ParserException(string.Format(
+					"The type {0} has no constructor", typeInfo.Name));
+			}
 		}
 
 		public override string ToString(string indent, bool last)
@@ -255,6 +259,7 @@ namespace Parser
 	{
 		private Type type;
 		public bool IsStatement => Operator.HasFlag(Operator.Assignment);
+		public override Type Type => type;
 		public Expression Left { get => (Expression)Children[0]; set => Children[0] = value; }
 		public Expression Right { get => (Expression)Children[1]; set => Children[1] = value; }
 
@@ -264,38 +269,32 @@ namespace Parser
 			Children.Capacity = 2;
 			Children.Add(left);
 			Children.Add(right);
-		}
-
-		public override Type Type
-		{
-			get
-			{
-				if (type == null) {
-					var leftType = Left.Type;
-					var rightType = Right.Type;
-					if (!leftType.Equals(rightType)) {
-						throw new ParserException(string.Format(
-							"Binary operation different types: {0} and {1}", 
-							TypeToString(leftType), TypeToString(rightType)));
-					}
-					if (Operator.HasFlag(Operator.BoolOperator)) {
-						if (!Operator.HasFlag(Operator.СomparisonOperator) && !leftType.Info.IsBoolean) {
-							throw new ParserException(string.Format(
-								"Operation {0} not supported on type {1}",
-								StringRepresentation, TypeToString(leftType)));
-						}
-						type = new Type(Type.BoolTypeInfo);
-					}
-					if (Operator.HasFlag(Operator.ArithmeticalOperator)) {
-						if (!leftType.Info.IsArithmetical) {
-							throw new ParserException(string.Format(
-								"Operation {0} not supported on type {1}",
-								StringRepresentation, TypeToString(leftType)));
-						}
-						type = leftType;
-					}
+			var leftType = Left.Type;
+			var rightType = Right.Type;
+			if (!Type.Equals(leftType, rightType)) {
+				throw new ParserException(token, string.Format(
+					"Binary operation different types: '{0}' and '{1}'",
+					TypeToString(leftType), TypeToString(rightType)));
+			}
+			if (Operator.HasFlag(Operator.BoolOperator)) {
+				if (!Operator.HasFlag(Operator.СomparisonOperator) && !leftType.Info.IsBoolean) {
+					throw new ParserException(token, string.Format(
+						"Operation '{0}' not supported on type '{1}'",
+						StringRepresentation, TypeToString(leftType)));
 				}
-				return type;
+				type = new Type(Type.BoolTypeInfo);
+			}
+			if (Operator.HasFlag(Operator.ArithmeticalOperator)) {
+				type = leftType;
+				if (Operator != Operator.Assignment && !type.Info.IsArithmetical) {
+					throw new ParserException(token, string.Format(
+						"Operation '{0}' not supported on type '{1}'",
+						StringRepresentation, TypeToString(type)));
+				}
+			}
+			if (ReferenceEquals(type.Info, Type.VoidTypeInfo)) {
+				throw new ParserException(token, string.Format(
+					"Operation '{0}' void type arguments", StringRepresentation));
 			}
 		}
 
@@ -321,6 +320,15 @@ namespace Parser
 		{
 			Children.Capacity = 1;
 			Children.Add(child);
+			if (!Type.Info.IsArithmetical) {
+				throw new ParserException(token, string.Format(
+					"Operation '{0}' invalid argument type '{1}'", 
+					StringRepresentation, TypeToString(Type)));
+			}
+			if (ReferenceEquals(Type.Info, Type.VoidTypeInfo)) {
+				throw new ParserException(token, string.Format(
+					"Operation '{0}' void type arguments", StringRepresentation));
+			}
 		}
 
 		public override string ToString(string indent, bool last)
@@ -369,9 +377,9 @@ namespace Parser
 
 	public class ArrayAccess : Expression, IValue
 	{
-		public override Type Type => new Type(Child.Type.Info);
-		public Expression Index { get => (Expression)Children[1]; set => Children[1] = value; }
-		public Expression Child { get => (Expression)Children[0]; set => Children[0] = value; }
+		public override Type Type => new Type(Child.Type.Info, Child.Type.ArrayRang - 1);
+		public Expression Index { get => (Expression)Children[0]; set => Children[0] = value; }
+		public Expression Child { get => (Expression)Children[1]; set => Children[1] = value; }
 		public bool IsVariable => true;
 
 		public ArrayAccess(Expression index, Expression child)
@@ -480,7 +488,7 @@ namespace Parser
 
 		private Invocation() { }
 
-		public Invocation(List<Expression> parameters, Expression child, TypeInfo.MethodInfo currentMethod)
+		public Invocation(List<Expression> parameters, Expression child, TypeInfo.MethodInfo currentMethod, Token token)
 		{
 			Parameters = parameters;
 			Children.Capacity = 1;
@@ -498,14 +506,14 @@ namespace Parser
 					methodInfo = (TypeInfo.MethodInfo)member.Info;
 				}
 				if (methodInfo == null) {
-					throw new ParserException("Invalid invocation target!\n" + Child.ToString());
+					throw new ParserException(token, "Invalid invocation target!\n" + Child.ToString());
 				}
 				if (methodInfo.Prams.Count != parameters.Count) {
-					throw new ParserException("Wrong invocation parameters count!\n");
+					throw new ParserException(token, "Wrong invocation parameters count!");
 				}
 				for (int i = 0; i < parameters.Count; i++) {
-					if (!methodInfo.Prams[i].Type.Equals(parameters[i].Type)) {
-						throw new ParserException("Invocation wrong parameter type!\n");
+					if (!Type.Equals(methodInfo.Prams[i].Type, parameters[i].Type)) {
+						throw new ParserException(token, "Invocation wrong parameter type!");
 					}
 				}
 			}
@@ -556,11 +564,11 @@ namespace Parser
 			Children.Add(child);
 			var intType = new Type(Type.IntTypeInfo);
 			var floatType = new Type(Type.FloatTypeInfo);
-			if (!childType.Equals(intType) && !childType.Equals(floatType)) {
+			if (!Type.Equals(childType, intType) && !Type.Equals(childType,floatType)) {
 				throw new ParserException(string.Format(
 					"Wrong typecast: bad source type {0}", childType.Info.Name));
 			}
-			if (!Type.Equals(intType) && !Type.Equals(floatType)) {
+			if (!Type.Equals(Type, intType) && !Type.Equals(Type, floatType)) {
 				throw new ParserException(string.Format(
 					"Wrong typecast: bad destination type {0}", Type.Info.Name));
 			}
@@ -590,7 +598,7 @@ namespace Parser
 			Name = name;
 			Children.Capacity = 1;
 			Children.Add(value);
-			if (!value.Type.Equals(Type)) {
+			if (!Assignment.Can(Type, value.Type)) {
 				throw new ParserException(string.Format(
 					"VariableDefinition wrong value type: variable {0}, value {1}",
 					TypeToString(Type), TypeToString(value.Type)));
@@ -643,10 +651,12 @@ namespace Parser
 
 		public If(Expression condition, Node blockStatement, Node elseStatement = null)
 		{
-			Children.Capacity = 3;
+			Children.Capacity = 2 + (elseStatement != null ? 1 : 0);
 			Children.Add(condition);
 			Children.Add(blockStatement);
-			Children.Add(elseStatement);
+			if (elseStatement != null) {
+				Children.Add(elseStatement);
+			}
 		}
 
 		public override string ToString(string indent, bool last)
@@ -752,16 +762,13 @@ namespace Parser
 		{
 			Children.Capacity = 1;
 			Children.Add(child);
-			if (currentMethod.OutputType.Equals(new Type(Type.VoidTypeInfo))) {
+			if (Type.Equals(currentMethod.OutputType, Type.VoidTypeInfo)) {
 				if (Child != null) {
 					throw new ParserException(returnToken, string.Format(
 						"Method {0} return {1}, but expected nothing",
 						currentMethod.Name, Child.ToString()));
 				}
-			} else if (
-				(Type == null && !currentMethod.OutputType.IsReference()) ||
-				(Type != null && !currentMethod.OutputType.Equals(Type))) 
-			{
+			} else if (!Assignment.Can(currentMethod.OutputType, Type)) {
 				throw new ParserException(returnToken, string.Format(
 					"Method {0} return wrong type: {1}, but expected {2}",
 					currentMethod.Name, TypeToString(Type), TypeToString(currentMethod.OutputType)));

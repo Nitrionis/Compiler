@@ -1,7 +1,16 @@
-public class Test {
-	public void Foo() {
-		bool b;
-		b = true && false;
-		b = true || false;
-	}
-}
+└─public class Test
+  └─public void Foo
+    ├─bool b
+    | └─ Literal False type bool
+    ├─ Binary = type bool
+    | ├─ Variable bool b
+    | └─ Binary && type bool
+    |   ├─ Literal True type bool
+    |   └─ Literal False type bool
+    └─;
+    ├─ Binary = type bool
+    | ├─ Variable bool b
+    | └─ Binary || type bool
+    |   ├─ Literal True type bool
+    |   └─ Literal False type bool
+    └─;

@@ -1,6 +1,6 @@
-public class Test {
-	public int Foo() {
-		int[] arr;
-		int[] arr = null;
-	}
-}
+└─public class Test
+  └─public void Foo
+    ├─int[] arr
+    | └─ Literal null type int[]
+    └─int[] arr2
+      └─ Literal null type null

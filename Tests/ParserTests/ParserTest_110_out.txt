@@ -1,11 +1,11 @@
-public class Test {
-	public void Foo() {
-		while (true) {
-			while (true) {
-				while (true) {
-				
-				}
-			}
-		}
-	}
-}
+└─public class Test
+  └─public void Foo
+    └─while
+      ├─ Literal True type bool
+      └─{...}
+        └─while
+          ├─ Literal True type bool
+          └─{...}
+            └─while
+              ├─ Literal True type bool
+              └─{...}

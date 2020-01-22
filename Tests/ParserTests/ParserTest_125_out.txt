@@ -1,11 +1,9 @@
-public class Program
-{
-	public static int[] GetArr() { return new int[1] { 0 }; }
-
-	public void Foo() {
-		int a;
-		int b;
-		int c;
-		int d = c = b = a = GetArr()[0];
-	}
-}
+└─public class Program
+  └─public void Foo
+    └─int a
+      └─...[...] type int
+        ├─ Literal 0 type int
+        └─() Parenthesis type int[]
+          └─ new int[...]
+            ├─ Literal 1 type int
+            └─ Literal 0 type int

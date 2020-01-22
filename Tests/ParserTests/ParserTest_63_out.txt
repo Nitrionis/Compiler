@@ -1,5 +1,5 @@
-public class Test {
-	public void Foo() {
-		int i = (int)3.0;
-	}
-}
+└─public class Test
+  └─public void Foo
+    └─int i
+      └─ (int) TypeCast
+        └─ Literal 3 type float

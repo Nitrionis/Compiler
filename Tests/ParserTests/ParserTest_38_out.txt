@@ -1,3 +1,1 @@
-public class Test {
-	public int a() {;
-}
+Unexpected end.

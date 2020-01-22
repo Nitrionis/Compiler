@@ -1,6 +1,6 @@
-public class Test {
-	public void Foo() {
-		int i = 3;
-		float f = 3.0;
-	}
-}
+└─public class Test
+  └─public void Foo
+    ├─int i
+    | └─ Literal 3 type int
+    └─float f
+      └─ Literal 3 type float

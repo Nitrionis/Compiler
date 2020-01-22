@@ -1,3 +1,1 @@
-public class Test {
-	public static int
-}
+(r:3, c:1) Syntax error: 'identifier' expected, but '}' found

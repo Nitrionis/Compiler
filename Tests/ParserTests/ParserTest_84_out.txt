@@ -1,5 +1,5 @@
-public class Test {
-	public void Foo() {
-		if (true) {}
-	}
-}
+└─public class Test
+  └─public void Foo
+    └─if
+      ├─ Literal True type bool
+      └─{...}

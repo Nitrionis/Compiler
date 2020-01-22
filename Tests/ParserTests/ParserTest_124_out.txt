@@ -1,11 +1,25 @@
-public class Program
-{
-	public static int[] GetArr() { return new int[1] { 0 }; }
-
-	public void Foo() {
-		int a;
-		int b;
-		int c;
-		int d = c = b = a = GetArr()[0];
-	}
-}
+└─public class Program
+  ├─public static int[] GetArr
+  | ├─return ... type int[]
+  | | └─ new int[...]
+  | |   ├─ Literal 1 type int
+  | |   └─ Literal 0 type int
+  | └─;
+  └─public void Foo
+    ├─int a
+    | └─ Literal 0 type int
+    ├─int b
+    | └─ Literal 0 type int
+    ├─int c
+    | └─ Literal 0 type int
+    └─int d
+      └─ Binary = type int
+        ├─ Variable int c
+        └─ Binary = type int
+          ├─ Variable int b
+          └─ Binary = type int
+            ├─ Variable int a
+            └─...[...] type int
+              ├─ Literal 0 type int
+              └─ () Invocation type int[]
+                └─ Method int[] GetArr

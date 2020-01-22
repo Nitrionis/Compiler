@@ -1,6 +1,6 @@
-public class Test {
-	public void Foo() {
-		int a;
-		int b = a;
-	}
-}
+└─public class Test
+  └─public void Foo
+    ├─int a
+    | └─ Literal 0 type int
+    └─int b
+      └─ Literal 0 type int

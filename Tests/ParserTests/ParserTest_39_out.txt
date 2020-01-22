@@ -1,3 +1,2 @@
-public class Test {
-	public void a() {}
-}
+└─public class Test
+  └─public void a

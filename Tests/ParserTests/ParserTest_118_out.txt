@@ -1,17 +1,27 @@
-public class Test {
-	public int Foo() {
-		for (;;) {
-			for (;;) {
-				return 0;
-			}
-			return 0;
-		}
-		while (true) {
-			while (true) {
-				return 0;
-			}
-			return 0;
-		}
-		return 0;
-	}
-}
+└─public class Test
+  └─public int Foo
+    ├─for
+    | └─{...}
+    |   ├─for
+    |   | └─{...}
+    |   |   ├─return ... type int
+    |   |   | └─ Literal 0 type int
+    |   |   └─;
+    |   ├─return ... type int
+    |   | └─ Literal 0 type int
+    |   └─;
+    ├─while
+    | ├─ Literal True type bool
+    | └─{...}
+    |   ├─while
+    |   | ├─ Literal True type bool
+    |   | └─{...}
+    |   |   ├─return ... type int
+    |   |   | └─ Literal 0 type int
+    |   |   └─;
+    |   ├─return ... type int
+    |   | └─ Literal 0 type int
+    |   └─;
+    ├─return ... type int
+    | └─ Literal 0 type int
+    └─;

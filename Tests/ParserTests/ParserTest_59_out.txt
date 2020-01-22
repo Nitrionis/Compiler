@@ -1,3 +1,2 @@
-public class Test {
-	public void Foo(int i, float f) { }
-}
+└─public class Test
+  └─public void Foo

@@ -1,1 +1,1 @@
-public class 1
+(r:1, c:14) Syntax error: 'identifier' expected, but '1' found

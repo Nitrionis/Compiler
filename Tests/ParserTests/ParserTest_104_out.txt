@@ -1,5 +1,1 @@
-public class Test {
-	public void Foo() {
-		bool b = (bool)0;
-	}
-}
+Wrong typecast: bad destination type bool

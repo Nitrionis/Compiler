@@ -1,5 +1,4 @@
-public class Test {
-	public void Foo() {
-		Test t = null;
-	}
-}
+└─public class Test
+  └─public void Foo
+    └─Test t
+      └─ Literal null type null

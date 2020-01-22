@@ -1,5 +1,15 @@
-public class Test {
-	public void Foo() {
-		int i = (1 + 2) * ((3 - 4) / 5);
-	}
-}
+└─public class Test
+  └─public void Foo
+    └─int i
+      └─ Binary * type int
+        ├─() Parenthesis type int
+        | └─ Binary + type int
+        |   ├─ Literal 1 type int
+        |   └─ Literal 2 type int
+        └─() Parenthesis type int
+          └─ Binary / type int
+            ├─() Parenthesis type int
+            | └─ Binary - type int
+            |   ├─ Literal 3 type int
+            |   └─ Literal 4 type int
+            └─ Literal 5 type int

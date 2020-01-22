@@ -1,7 +1,1 @@
-public class Test {
-	public void Foo() {
-		bool b;
-		b = true & false;
-		b = true | false;
-	}
-}
+(r:4, c:18) Operation '&' not supported on type 'bool'

@@ -1,3 +1,5 @@
-public class Test {
-	public int One() { return 0; }
-}
+└─public class Test
+  └─public int Foo
+    ├─return ... type int
+    | └─ Literal 0 type int
+    └─;

@@ -1,5 +1,7 @@
-public class Test {
-	public int a;
-	public int b;
-	public int c;
-}
+└─public class Test
+  ├─public int a
+  | └─ Literal 0 type int
+  ├─public int b
+  | └─ Literal 0 type int
+  └─public int c
+    └─ Literal 0 type int

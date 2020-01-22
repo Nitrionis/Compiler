@@ -1,5 +1,8 @@
-public class Program
-{
-	public static int GetInt() { return 3; }
-	public static int a = GetInt();
-}
+└─public class Program
+  ├─public static int GetInt
+  | ├─return ... type int
+  | | └─ Literal 3 type int
+  | └─;
+  └─public static int a
+    └─ () Invocation type int
+      └─ Method int GetInt

@@ -1,5 +1,4 @@
-public class Test {
-	public void Foo() {
-		for (;;) {}
-	}
-}
+└─public class Test
+  └─public void Foo
+    └─for
+      └─{...}

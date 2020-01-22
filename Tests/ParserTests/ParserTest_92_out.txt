@@ -1,5 +1,1 @@
-public class Test {
-	public void Foo() {
-		int i = (int)new Test();
-	}
-}
+Wrong typecast: bad source type Test

@@ -1,6 +1,13 @@
-public class Program
-{
-	public void Foo() {
-		int a = new int[1] { 0 };
-	}
-}
+└─public class Program
+  └─public void Foo
+    └─int a
+      └─...[...] type int
+        ├─ Literal 0 type int
+        └─...[...] type int[]
+          ├─ Literal 0 type int
+          └─() Parenthesis type int[][]
+            └─ new int[...][]
+              ├─ Literal 1 type int
+              └─ new int[...]
+                ├─ Literal 1 type int
+                └─ Literal 0 type int

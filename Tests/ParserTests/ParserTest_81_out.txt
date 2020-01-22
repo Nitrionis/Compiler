@@ -1,5 +1,1 @@
-public class Test {
-	public void Foo() {
-		if (true
-	}
-}
+(r:4, c:5) Syntax error: ')' expected, but '}' found

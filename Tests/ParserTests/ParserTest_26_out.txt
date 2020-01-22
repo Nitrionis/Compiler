@@ -1,3 +1,1 @@
-public class Test {
-	public int a int
-}
+(r:2, c:18) Syntax error: '(' or '=' or ';' expected, but 'int' found

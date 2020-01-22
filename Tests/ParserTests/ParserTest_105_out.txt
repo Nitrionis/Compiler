@@ -1,5 +1,5 @@
-public class Test {
-	public void Foo() {
-		while (true) {}
-	}
-}
+└─public class Test
+  └─public void Foo
+    └─while
+      ├─ Literal True type bool
+      └─{...}

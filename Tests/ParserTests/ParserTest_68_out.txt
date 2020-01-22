@@ -1,5 +1,1 @@
-public class Test {
-	public void Foo() {
-		int[] arr = new int[];
-	}
-}
+(r:3, c:29) Syntax error: array size not set

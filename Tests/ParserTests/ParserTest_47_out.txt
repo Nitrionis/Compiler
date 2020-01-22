@@ -1,5 +1,1 @@
-public class Test {
-	public void Foo() {
-		public
-	}
-}
+(r:3, c:9) Syntax error: bad keyword 'public'

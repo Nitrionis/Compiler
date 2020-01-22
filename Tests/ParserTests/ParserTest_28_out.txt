@@ -1,3 +1,1 @@
-public class Test {
-	public int a = ;
-}
+(r:2, c:20) Expression not recognized

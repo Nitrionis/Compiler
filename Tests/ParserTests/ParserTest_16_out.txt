@@ -1,3 +1,1 @@
-public class Test {
-	a
-}
+(r:2, c:5) Syntax error: 'public' expected, but 'a' found

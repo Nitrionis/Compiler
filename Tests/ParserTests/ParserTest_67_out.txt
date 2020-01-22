@@ -1,3 +1,5 @@
-public class Test {
-	public int[] Foo() { return null; }
-}
+└─public class Test
+  └─public int[] Foo
+    ├─return ... type null
+    | └─ Literal null type null
+    └─;

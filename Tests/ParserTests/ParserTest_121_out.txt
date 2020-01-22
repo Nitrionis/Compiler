@@ -1,5 +1,1 @@
-public class Program
-{
-	public int GetInt() { return 3; }
-	public static int a = GetInt();
-}
+(r:4, c:27) A field 'a' initializer cannot reference the non-static method 'GetInt'

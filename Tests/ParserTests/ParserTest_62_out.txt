@@ -1,7 +1,1 @@
-public class Test {
-	public void Foo() {
-		int i = 3;
-		float f = i;
-		i = f;
-	}
-}
+VariableDefinition wrong value type: variable float, value int

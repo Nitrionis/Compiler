@@ -1,3 +1,1 @@
-public class Test {
-	public 1
-}
+(r:2, c:12) Syntax error: type '1' not found

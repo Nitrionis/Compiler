@@ -1,3 +1,1 @@
-public class Test {
-	public void Foo(public) {}
-}
+(r:2, c:21) Syntax error: type 'public' not found

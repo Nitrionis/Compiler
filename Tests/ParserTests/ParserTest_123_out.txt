@@ -1,10 +1,13 @@
-public class Program
-{
-	public static int a;
-	public static int GetInt() { return 1; }
-
-	public void Foo() {
-		int b = a;
-		int c = GetInt();
-	}
-}
+└─public class Program
+  ├─public static int a
+  | └─ Literal 0 type int
+  ├─public static int GetInt
+  | ├─return ... type int
+  | | └─ Literal 1 type int
+  | └─;
+  └─public void Foo
+    ├─int b
+    | └─ Variable int a
+    └─int c
+      └─ () Invocation type int
+        └─ Method int GetInt

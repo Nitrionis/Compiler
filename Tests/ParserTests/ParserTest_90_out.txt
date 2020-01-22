@@ -1,5 +1,8 @@
-public class Test {
-	public void Foo() {
-		int i = (int)(float)(int)(float)0;
-	}
-}
+└─public class Test
+  └─public void Foo
+    └─int i
+      └─ (int) TypeCast
+        └─ (float) TypeCast
+          └─ (int) TypeCast
+            └─ (float) TypeCast
+              └─ Literal 0 type int

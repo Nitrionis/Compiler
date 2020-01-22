@@ -1,5 +1,1 @@
-public class Test {
-	public void Foo() {
-		string s = (string)0;
-	}
-}
+Wrong typecast: bad destination type string

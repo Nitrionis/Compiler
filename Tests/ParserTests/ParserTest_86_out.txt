@@ -1,5 +1,6 @@
-public class Test {
-	public void Foo() {
-		if (true) {} else {}
-	}
-}
+└─public class Test
+  └─public void Foo
+    └─if
+      ├─ Literal True type bool
+      ├─{...}
+      └─{...}

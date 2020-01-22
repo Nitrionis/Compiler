@@ -1,5 +1,4 @@
-public class Test {
-	public void Foo() {
-		Test t = new Test();
-	}
-}
+└─public class Test
+  └─public void Foo
+    └─Test t
+      └─ new Test(...)

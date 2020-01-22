@@ -1,0 +1,1 @@
+(r:1, c:1) Syntax error: 'public' expected, but 'int' found

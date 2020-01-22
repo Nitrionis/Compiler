@@ -1,13 +1,11 @@
-public class Test {
-	public void Foo() {
-		{
-			int a;
-		}
-		{
-			int a;
-		}
-		{
-			int a;
-		}
-	}
-}
+└─public class Test
+  └─public void Foo
+    ├─{...}
+    | └─int a
+    |   └─ Literal 0 type int
+    ├─{...}
+    | └─int a
+    |   └─ Literal 0 type int
+    └─{...}
+      └─int a
+        └─ Literal 0 type int

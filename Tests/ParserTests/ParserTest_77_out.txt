@@ -1,6 +1,1 @@
-public class Test {
-	public void Foo() {
-		int a;
-		int a;
-	}
-}
+(r:4, c:13) identifier a not unique

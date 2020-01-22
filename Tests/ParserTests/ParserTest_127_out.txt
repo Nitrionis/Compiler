@@ -1,19 +1,42 @@
-public class One {
-	public int Foo() { return 0; }
-	public static int FooStatic() { return 0; }
-	public static int staticC;
-}
-
-public class Program
-{
-	public static int a;
-	public int b;
-
-	public void Foo() {
-		a = One.FooStatic();
-		a = One.staticC;
-		One o = new One();
-		a = o.FooStatic();
-		b = o.Foo();
-	}
-}
+└─public class One
+  ├─public int Foo
+  | ├─return ... type int
+  | | └─ Literal 0 type int
+  | └─;
+  ├─public static int FooStatic
+  | ├─return ... type int
+  | | └─ Literal 0 type int
+  | └─;
+  └─public static int staticC
+    └─ Literal 0 type int
+└─public class Program
+  ├─public static int a
+  | └─ Literal 0 type int
+  ├─public int b
+  | └─ Literal 0 type int
+  └─public void Foo
+    ├─ Binary = type int
+    | ├─ Variable int a
+    | └─ () Invocation type int
+    |   └─ ... .FooStatic type int
+    |     └─ One TypeReference
+    └─;
+    ├─ Binary = type int
+    | ├─ Variable int a
+    | └─ ... .staticC type int
+    |   └─ One TypeReference
+    └─;
+    ├─One o
+    | └─ new One(...)
+    ├─ Binary = type int
+    | ├─ Variable int a
+    | └─ () Invocation type int
+    |   └─ ... .FooStatic type int
+    |     └─ Variable One o
+    └─;
+    ├─ Binary = type int
+    | ├─ Variable int b
+    | └─ () Invocation type int
+    |   └─ ... .Foo type int
+    |     └─ Variable One o
+    └─;
