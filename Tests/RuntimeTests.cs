@@ -9,6 +9,9 @@ namespace Tests
 	public class RuntimeTests
 	{
 		[TestMethod] public void Test_1() => Run(1);
+		[TestMethod] public void Test_2() => Run(2);
+		[TestMethod] public void Test_3() => Run(3);
+		[TestMethod] public void Test_4() => Run(4);
 
 		private void Run(int testIndex)
 		{
@@ -18,12 +21,10 @@ namespace Tests
 			var input = File.ReadAllText(path);
 			Console.WriteLine(input);
 			Console.WriteLine("\n↓------------------Output----------------↓\n");
-			var parser = new Parser.Parser(path);
+			var runtime = new Parser.Runtime(path);
 			var output = "";
 			try {
-				foreach (var v in parser.ParseProgram()) {
-					output += v?.ToString() ?? "null\n";
-				}
+				runtime.Execute();
 			} catch (ParserException e) {
 				output += e.Message;
 			}

@@ -31,7 +31,7 @@ namespace Parser
 		/// </summary>
 		public Context(TypeInfo typeInfo, Dictionary<IVariable, TypeInstance> fields = null)
 		{
-			Fields = fields ?? null;
+			Fields = fields;
 			StaticFields = typeInfo.StaticFields;
 			LocalVariables = new Dictionary<IVariable, TypeInstance>();
 		}
@@ -39,11 +39,11 @@ namespace Parser
 		/// <summary>
 		/// Creates a copy of the context without local variables.
 		/// </summary>
-		public Context(Context context)
+		public Context(Context context, Dictionary<IVariable, TypeInstance> localVariables = null)
 		{
 			Fields = context.Fields;
 			StaticFields = context.StaticFields;
-			LocalVariables = new Dictionary<IVariable, TypeInstance>();
+			LocalVariables = localVariables ?? new Dictionary<IVariable, TypeInstance>();
 		}
 
 		public static void Push(Context context) => stack.Push(context);
@@ -98,10 +98,10 @@ namespace Parser
 		public TypeInstance(Type type, List<Node> data = null)
 		{
 			if (type.ArrayRang > 0) {
-				var arr = new object[(int)((IExecutable)data[0]).Execute().Value];
+				var arr = new TypeInstance[(int)((IExecutable)data[0]).Execute().Value];
 				int index = 0;
 				foreach (var item in data.Skip(1)) {
-					arr[index++] = ((IExecutable)item).Execute().Value;
+					arr[index++] = ((IExecutable)item).Execute();
 				}
 				Value = arr;
 			} else {
@@ -109,24 +109,23 @@ namespace Parser
 			}
 		}
 
-		private static object SingleObjectConstructor(TypeInfo typeInfo)
+		private static Context SingleObjectConstructor(TypeInfo typeInfo)
 		{
 #if DEBUG
 			if (Type.Predefined.ContainsKey(typeInfo.Name)) {
 				throw new InvalidOperationException("Wrong constructor");
 			}
 #endif
-			var fields = new Dictionary<IVariable, object>(typeInfo.Fields.Count);
-			foreach (var f in typeInfo.StaticFields) {
-				fields.Add(f.Key, f.Value);
-			}
+			var fields = new Dictionary<IVariable, TypeInstance>(
+				typeInfo.Fields.Count - typeInfo.StaticFields.Count
+			);
 			foreach (var f in typeInfo.Fields) {
 				var field = (TypeInfo.FieldInfo)f.Value;
 				if (!field.IsStatic) {
 					fields.Add(field, field.Initializer.Execute());
 				}
 			}
-			return fields;
+			return new Context(typeInfo, fields);
 		}
 	}
 
@@ -173,7 +172,7 @@ namespace Parser
 			if (enterPoint.Prams.Count != 0) {
 				throw new ParserException("Entry point invalid params count");
 			}
-			Context.Push(new Context(typeInfo.StaticFields));
+			Context.Push(new Context(typeInfo));
 			enterPoint.Body.Execute();
 		}
 	}

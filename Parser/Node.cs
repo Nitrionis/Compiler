@@ -209,7 +209,7 @@ namespace Parser
 			GetLogDecoration(indent, last).Prefix + string.Format(
 				" Method {0} {1}\n", TypeToString(Type), Method.Name);
 
-		public override TypeInstance Execute() => Method.Body.Execute();
+		public override TypeInstance Execute() => throw new InvalidOperationException();
 	}
 
 	public class VariableReference : Expression, IValue
@@ -229,6 +229,8 @@ namespace Parser
 		public override string ToString(string indent, bool last) => 
 			GetLogDecoration(indent, last).Prefix + string.Format(
 				" Variable {0} {1}\n", TypeToString(Type), variable.Name);
+
+		public override TypeInstance Execute() => Context.Current.Get(variable);
 	}
 
 	public class Literal : Expression, IValue
@@ -325,6 +327,56 @@ namespace Parser
 			return decoration.Prefix + string.Format(" Binary {0} type {1}\n", 
 				StringRepresentation, TypeToString(Type)) + res;
 		}
+
+		public override TypeInstance Execute()
+		{
+			var parametersType = Left.Type;
+			var leftRes = Left.Execute();
+			var rightRes = Right.Execute();
+			switch (Operator) {
+				case Operator.Assignment:
+					leftRes.Value = rightRes.Value;
+					return leftRes;
+				case Operator.EqualityTest:
+					if (parametersType.ArrayRang == 0) {
+						return new TypeInstance(parametersType.Info.EqualityTest(leftRes.Value, rightRes.Value));
+					} else {
+						return new TypeInstance(ReferenceEquals(leftRes.Value, rightRes.Value));
+					}
+				case Operator.NotEqualityTest:
+					if (parametersType.ArrayRang == 0) {
+						return new TypeInstance(!parametersType.Info.EqualityTest(leftRes.Value, rightRes.Value));
+					} else {
+						return new TypeInstance(!ReferenceEquals(leftRes.Value, rightRes.Value));
+					}
+				case Operator.LogicalAnd: return new TypeInstance((bool)leftRes.Value && (bool)rightRes.Value);
+				case Operator.LogicalOr: return new TypeInstance((bool)leftRes.Value || (bool)rightRes.Value);
+				case Operator.LessTest: return Type.Equals(parametersType, Type.IntTypeInfo) ?
+					new TypeInstance((int)leftRes.Value < (int)rightRes.Value) :
+					new TypeInstance((float)leftRes.Value < (float)rightRes.Value);
+				case Operator.MoreTest: return Type.Equals(parametersType, Type.IntTypeInfo) ?
+					new TypeInstance((int)leftRes.Value > (int)rightRes.Value) :
+					new TypeInstance((float)leftRes.Value > (float)rightRes.Value);
+				case Operator.Add: return Type.Equals(parametersType, Type.IntTypeInfo) ?
+					new TypeInstance((int)leftRes.Value + (int)rightRes.Value) : 
+					new TypeInstance((float)leftRes.Value + (float)rightRes.Value);
+				case Operator.Subtract: return Type.Equals(parametersType, Type.IntTypeInfo) ?
+					new TypeInstance((int)leftRes.Value - (int)rightRes.Value) :
+					new TypeInstance((float)leftRes.Value - (float)rightRes.Value);
+				case Operator.Multiply: return Type.Equals(parametersType, Type.IntTypeInfo) ?
+					new TypeInstance((int)leftRes.Value * (int)rightRes.Value) :
+					new TypeInstance((float)leftRes.Value * (float)rightRes.Value);
+				case Operator.Divide: return Type.Equals(parametersType, Type.IntTypeInfo) ?
+					new TypeInstance((int)leftRes.Value / (int)rightRes.Value) :
+					new TypeInstance((float)leftRes.Value / (float)rightRes.Value);
+				case Operator.Remainder: return Type.Equals(parametersType, Type.IntTypeInfo) ?
+					new TypeInstance((int)leftRes.Value % (int)rightRes.Value) :
+					new TypeInstance((float)leftRes.Value % (float)rightRes.Value);
+				case Operator.BitwiseAnd: return new TypeInstance((int)leftRes.Value & (int)rightRes.Value);
+				case Operator.BitwiseOr: return new TypeInstance((int)leftRes.Value | (int)rightRes.Value);
+			}
+			throw new InvalidOperationException();
+		}
 	}
 
 	public class UnaryOperation : Operation
@@ -357,6 +409,18 @@ namespace Parser
 			}
 			return decoration.Prefix + string.Format(" Unary {0} type {1}\n", 
 				StringRepresentation, TypeToString(Type)) + res;
+		}
+
+		public override TypeInstance Execute()
+		{
+			switch (Operator) {
+				case Operator.Add: return new TypeInstance(Child.Execute().Value);
+				case Operator.Subtract: return new TypeInstance(Type.Equals(Type, Type.IntTypeInfo) ? 
+						-(int)Child.Execute().Value : -(float)Child.Execute().Value);
+				case Operator.LogicalNot: return new TypeInstance(!(bool)Child.Execute().Value);
+				case Operator.BitwiseNot: return new TypeInstance(~(int)Child.Execute().Value);
+			}
+			throw new InvalidOperationException();
 		}
 	}
 
@@ -472,6 +536,8 @@ namespace Parser
 			}
 			return res;
 		}
+
+		public override TypeInstance Execute() => Child.Execute().AsClass.Get(Info);
 	}
 
 	public class Parenthesis : Expression
@@ -559,7 +625,19 @@ namespace Parser
 
 		public override TypeInstance Execute()
 		{
-			return MethodInfo.Body.Execute(); // todo
+			var parameters = new Dictionary<IVariable, TypeInstance>(Parameters.Count);
+			for (int i = 0; i < Parameters.Count; i++) {
+				parameters.Add(MethodInfo.Prams[i], Parameters[i].Execute());
+			}
+			if (Child is MemberAccess) {
+				var owner = (Expression)Child.Children[0];
+				Context.Push(new Context(owner.Execute().AsClass, parameters));
+			} else {
+				Context.Push(new Context(Child.Execute().AsClass, parameters));
+			}
+			var res = MethodInfo.Body.Execute();
+			Context.Pop();
+			return res;
 		}
 	}
 
@@ -575,6 +653,8 @@ namespace Parser
 
 		public override string ToString(string indent, bool last) => 
 			GetLogDecoration(indent, last).Prefix + " " + TypeToString(Type) + " TypeReference\n";
+
+		public override TypeInstance Execute() => new TypeInstance(new Context(Type.Info));
 	}
 
 	public class TypeCast : Expression
@@ -609,6 +689,8 @@ namespace Parser
 			}
 			return decoration.Prefix + string.Format(" ({0}) TypeCast\n", TypeToString(Type)) + res;
 		}
+
+		public override TypeInstance Execute() => Child.Execute();
 	}
 
 	public class VariableDefinition : Node, IStatement, IVariable
@@ -640,10 +722,20 @@ namespace Parser
 			}
 			return res;
 		}
+
+		public TypeInstance Execute()
+		{
+			Block.Stack.Peek().LocalVariables.Add(this);
+			Context.Current.LocalVariables.Add(this, Value.Execute());
+			return null;
+		}
 	}
 
 	public class Block : Node, IStatement, IScope
 	{
+		public static readonly Stack<Block> Stack = new Stack<Block>();
+
+		public readonly List<IVariable> LocalVariables = new List<IVariable>();
 		public Dictionary<string, IVariable> Variables { get; }
 		public bool IsStatement => true;
 
@@ -657,6 +749,20 @@ namespace Parser
 				res += Children[i].ToString(decoration.Indent, i == Children.Count - 1);
 			}
 			return res;
+		}
+
+		public TypeInstance Execute()
+		{
+			Stack.Push(this);
+			foreach (var s in Children) {
+				((IExecutable)s).Execute();
+			}
+			Stack.Pop();
+			var context = Context.Current;
+			foreach (var v in LocalVariables) {
+				context.LocalVariables.Remove(v);
+			}
+			return null;
 		}
 	}
 
@@ -693,6 +799,16 @@ namespace Parser
 				res += Children[i]?.ToString(decoration.Indent, i == Children.Count - 1);
 			}
 			return res;
+		}
+
+		public TypeInstance Execute()
+		{
+			if ((bool)Condition.Execute().Value) {
+				((IStatement)Children[1]).Execute();
+			} else if (Children.Capacity == 3) {
+				((IStatement)Children[2]).Execute();
+			}
+			return null;
 		}
 	}
 
@@ -736,6 +852,16 @@ namespace Parser
 			}
 			return res;
 		}
+
+		public TypeInstance Execute()
+		{
+			Initializer?.Execute();
+			while ((bool)Condition.Execute().Value) {
+				BlockStatement.Execute();
+				((IExecutable)Children[2]).Execute();
+			}
+			return null;
+		}
 	}
 
 	public class While : Node, IStatement
@@ -760,11 +886,21 @@ namespace Parser
 			}
 			return res;
 		}
+
+		public TypeInstance Execute()
+		{
+			while ((bool)Condition.Execute().Value) {
+				BlockStatement.Execute();
+			}
+			return null;
+		}
 	}
 
 	public class Break : Node, IStatement
 	{
 		public bool IsStatement => true;
+
+		public TypeInstance Execute() => throw new NotImplementedException();
 
 		public override string ToString(string indent, bool last) => 
 			GetLogDecoration(indent, true).Prefix + "break\n";
@@ -811,6 +947,11 @@ namespace Parser
 				res += Children[i]?.ToString(decoration.Indent, i == Children.Count - 1);
 			}
 			return decoration.Prefix + string.Format("return ... type {0}\n", TypeToString(Type)) + res;
+		}
+
+		public TypeInstance Execute()
+		{
+			throw new NotImplementedException();
 		}
 	}
 }
