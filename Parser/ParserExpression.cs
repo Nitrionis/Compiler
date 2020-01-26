@@ -131,9 +131,6 @@ namespace Parser
 						}
 						token = NextTokenThrowIfFailed();
 						uint arrayRang = 1 + ParseArrayRang();
-						if (!IsOperator(PeekToken(), Operator.OpenCurlyBrace)) {
-							throw new WrongTokenFound(token, "{");
-						}
 						return new ArrayCreation(
 							type: new Type(typeInfo, arrayRang),
 							size: sizeExpression,

@@ -175,7 +175,7 @@ namespace Parser
 			var blockStatement = (Block)ParseBlock();
 			CurrentMethod = null;
 			scopes.Pop();
-			return new MethodDefinition(methodInfo, blockStatement.Children);
+			return new MethodDefinition(methodInfo, blockStatement);
 		}
 
 		private Type ParseType()

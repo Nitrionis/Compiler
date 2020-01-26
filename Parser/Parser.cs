@@ -11,7 +11,7 @@ namespace Parser
     {
 		private readonly Lexer lexer;
 		private readonly Stack<Token> foreseeableFuture;
-		private readonly Dictionary<string, TypeInfo> Types;
+		public readonly Dictionary<string, TypeInfo> Types;
 
 		protected Parser(Lexer lexer)
 		{

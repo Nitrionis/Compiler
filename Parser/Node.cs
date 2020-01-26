@@ -43,7 +43,14 @@ namespace Parser
 		public Dictionary<string, IVariable> Variables { get; } = new Dictionary<string, IVariable>();
 	}
 
-	public interface IStatement
+	public interface IExecutable
+	{
+		/// <summary>Performs a subtree.</summary>
+		/// <returns>Returns null if the node does not return a value.</returns>
+		TypeInstance Execute();
+	}
+
+	public interface IStatement : IExecutable
 	{
 		bool IsStatement { get; }
 	}
@@ -88,6 +95,7 @@ namespace Parser
 					"FieldDefinition wrong initializer type: field {0}, initializer {1}",
 					TypeToString(FieldInfo.Type), TypeToString(initializer.Type)));
 			}
+			fieldInfo.Initializer = initializer;
 		}
 
 		public override string ToString(string indent, bool last)
@@ -108,12 +116,13 @@ namespace Parser
 	{
 		public readonly TypeInfo.MethodInfo MethodInfo;
 
-		public MethodDefinition(TypeInfo.MethodInfo methodInfo, List<Node> children)
+		public MethodDefinition(TypeInfo.MethodInfo methodInfo, Block block)
 		{
 			MethodInfo = methodInfo;
 			Children.Capacity = 1;
-			Children = children;
+			Children = block.Children;
 			CheckReturns();
+			methodInfo.Body = block;
 		}
 
 		public override string ToString(string indent, bool last)
@@ -144,11 +153,13 @@ namespace Parser
 		}
 	}
 
-	public abstract class Expression : Node, ITypeProvider
+	public abstract class Expression : Node, ITypeProvider, IExecutable
 	{
 		public abstract Type Type { get; }
 
 		public Expression() { }
+
+		public abstract TypeInstance Execute();
 	}
 
 	public class ObjectCreation : Expression, IStatement, IValue
@@ -178,6 +189,8 @@ namespace Parser
 			}
 			return res;
 		}
+
+		public override TypeInstance Execute() => new TypeInstance(Type);
 	}
 
 	public class MethodReference : Expression, IValue
@@ -188,13 +201,15 @@ namespace Parser
 
 		public MethodReference(TypeInfo.MethodInfo method)
 		{
-			this.Method = method;
+			Method = method;
 			Children.Capacity = 0;
 		}
 
 		public override string ToString(string indent, bool last) =>
 			GetLogDecoration(indent, last).Prefix + string.Format(
 				" Method {0} {1}\n", TypeToString(Type), Method.Name);
+
+		public override TypeInstance Execute() => Method.Body.Execute();
 	}
 
 	public class VariableReference : Expression, IValue
@@ -237,6 +252,8 @@ namespace Parser
 		public override string ToString(string indent, bool last) => 
 			GetLogDecoration(indent, last).Prefix + string.Format(
 				" Literal {0} type {1}\n", Value?.ToString() ?? "null", TypeToString(Type));
+
+		public override TypeInstance Execute() => new TypeInstance(Value);
 	}
 
 	public abstract class Operation : Expression, IValue
@@ -373,6 +390,8 @@ namespace Parser
 			}
 			return res;
 		}
+
+		public override TypeInstance Execute() => new TypeInstance(Type, Children);
 	}
 
 	public class ArrayAccess : Expression, IValue
@@ -399,6 +418,8 @@ namespace Parser
 			return decoration.Prefix + string.Format(
 				"...[...] type {0}\n", TypeToString(Type)) + res;
 		}
+
+		public override TypeInstance Execute() => Child.Execute().AsArray[(int)Index.Execute().Value];
 	}
 
 	public class MemberAccess : Expression, IValue
@@ -433,13 +454,11 @@ namespace Parser
 			}
 			if (Info == null) {
 				throw new ParserException(string.Format(
-					"Type {0} has no member {1}",
-					type.Info.Name, MemberName));
+					"Type {0} has no member {1}", type.Info.Name, MemberName));
 			}
 			if (child is TypeReference && !isStatic) {
 				throw new ParserException(string.Format(
-					"Member {0} of type {1} is not static",
-					MemberName, type.Info.Name));
+					"Member {0} of type {1} is not static", MemberName, type.Info.Name));
 			}
 		}
 
@@ -475,6 +494,8 @@ namespace Parser
 			}
 			return decoration.Prefix + string.Format("() Parenthesis type {0}\n", TypeToString(Type)) + res;
 		}
+
+		public override TypeInstance Execute() => Child.Execute();
 	}
 
 	public class Invocation : Expression, IStatement
@@ -485,6 +506,7 @@ namespace Parser
 		public Expression Child { get => (Expression)Children[0]; set => Children[0] = value; }
 		public override Type Type => Child.Type;
 		public bool IsStatement => true;
+		public readonly TypeInfo.MethodInfo MethodInfo;
 
 		private Invocation() { }
 
@@ -494,25 +516,24 @@ namespace Parser
 			Children.Capacity = 1;
 			Children.Add(child);
 			if (child != Constructor) {
-				TypeInfo.MethodInfo methodInfo = null;
 				if (child is MethodReference methodReference) {
 					if (!methodReference.Method.IsStatic && (currentMethod?.IsStatic ?? false)) {
 						throw new ParserException(string.Format("Method '{0}' is not static in method '{1}'",
 							methodReference.Method.Name, currentMethod.Name));
 					}
-					methodInfo = methodReference.Method;
+					MethodInfo = methodReference.Method;
 				}
 				if (child is MemberAccess member && !member.IsVariable) {
-					methodInfo = (TypeInfo.MethodInfo)member.Info;
+					MethodInfo = (TypeInfo.MethodInfo)member.Info;
 				}
-				if (methodInfo == null) {
+				if (MethodInfo == null) {
 					throw new ParserException(token, "Invalid invocation target!\n" + Child.ToString());
 				}
-				if (methodInfo.Prams.Count != parameters.Count) {
+				if (MethodInfo.Prams.Count != parameters.Count) {
 					throw new ParserException(token, "Wrong invocation parameters count!");
 				}
 				for (int i = 0; i < parameters.Count; i++) {
-					if (!Type.Equals(methodInfo.Prams[i].Type, parameters[i].Type)) {
+					if (!Type.Equals(MethodInfo.Prams[i].Type, parameters[i].Type)) {
 						throw new ParserException(token, "Invocation wrong parameter type!");
 					}
 				}
@@ -534,6 +555,11 @@ namespace Parser
 				}
 			}
 			return decoration.Prefix + string.Format(" () Invocation type {0}\n", TypeToString(Type)) + res;
+		}
+
+		public override TypeInstance Execute()
+		{
+			return MethodInfo.Body.Execute(); // todo
 		}
 	}
 
@@ -747,6 +773,8 @@ namespace Parser
 	public class SemiColon : Node, IStatement
 	{
 		public bool IsStatement => true;
+
+		public TypeInstance Execute() => null;
 
 		public override string ToString(string indent, bool last) => 
 			GetLogDecoration(indent, true).Prefix + ";\n";

@@ -22,6 +22,7 @@ namespace Parser
 			public Type Type { get; }
 			public string Name { get; }
 			public bool IsStatic { get; }
+			public IExecutable Initializer;
 
 			public FieldInfo(Type type, string name, bool isStatic)
 			{
@@ -49,6 +50,7 @@ namespace Parser
 			public readonly Type OutputType;
 			public readonly string Name;
 			public readonly List<ParamsInfo> Prams;
+			public IExecutable Body;
 
 			string IVariable.Name => Name;
 			Type ITypeProvider.Type => OutputType;
@@ -69,6 +71,7 @@ namespace Parser
 		public readonly bool IsArithmetical;
 		public readonly bool IsBoolean;
 		public readonly object DefaultValue;
+		public readonly Dictionary<IVariable, TypeInstance> StaticFields;
 
 		public bool IsReference => DefaultValue == null;
 
@@ -86,6 +89,7 @@ namespace Parser
 			IsArithmetical = isArithmetical;
 			IsBoolean = isBoolean;
 			DefaultValue = defaultValue;
+			StaticFields = new Dictionary<IVariable, TypeInstance>();
 		}
 
 		public bool ContainsMember(string identifier) =>
@@ -100,8 +104,8 @@ namespace Parser
 		public static readonly TypeInfo VoidTypeInfo	= new TypeInfo("void", false, false, null, null);
 		public static readonly TypeInfo BoolTypeInfo	= new TypeInfo("bool", false, true, null, false);
 		public static readonly TypeInfo CharTypeInfo	= new TypeInfo("char", false, false, null, (char)0);
-		public static readonly TypeInfo IntTypeInfo		= new TypeInfo("int", true, false, null, (int)0);
-		public static readonly TypeInfo FloatTypeInfo	= new TypeInfo("float", true, false, null, (float)0.0f);
+		public static readonly TypeInfo IntTypeInfo		= new TypeInfo("int", true, false, null, 0);
+		public static readonly TypeInfo FloatTypeInfo	= new TypeInfo("float", true, false, null, 0.0f);
 		public static readonly TypeInfo StringTypeInfo	= new TypeInfo("string", false, false, null, null);
 
 		public readonly TypeInfo Info;
