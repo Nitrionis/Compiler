@@ -1,0 +1,21 @@
+public class Program {
+	public static void Main() {
+		int i = 5;
+		int j = i;
+		i = i + 1;
+		if (i == 6) {
+			Console.Write("i = 6\n");
+		}
+		if (j == 6) {
+			Console.Write("i = 6\n");
+		}
+		if (j == 5) {
+			Console.Write("i = 5\n");
+		}
+		if (i == 6 && j == 5) {
+			Console.Write("Done!\n");
+		} else {
+			Console.Write("Error!\n");
+		}
+	}
+}

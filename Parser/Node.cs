@@ -726,7 +726,7 @@ namespace Parser
 		public TypeInstance Execute()
 		{
 			Block.Stack.Peek().LocalVariables.Add(this);
-			Context.Current.LocalVariables.Add(this, Value.Execute());
+			Context.Current.LocalVariables.Add(this, new TypeInstance(Value.Execute().Value));
 			return null;
 		}
 	}
