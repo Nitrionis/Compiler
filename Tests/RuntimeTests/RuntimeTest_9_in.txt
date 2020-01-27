@@ -1,0 +1,16 @@
+public class Program {
+	public static void Main() {
+		if (false) {
+			Console.Write("Error\n");
+		} else if (true) {
+			Console.Write(" 1Done\n");
+			if (true) {
+				Console.Write(" 2Done\n");
+			} else {
+				Console.Write("Error\n");
+			}
+			Console.Write(" 3Done\n");
+		}
+		Console.Write(" 4Done\n");
+	}
+}

@@ -15,6 +15,12 @@ namespace Tests
 		[TestMethod] public void Test_5() => Run(5);
 		[TestMethod] public void Test_6() => Run(6);
 		[TestMethod] public void Test_7() => Run(7);
+		[TestMethod] public void Test_8() => Run(8);
+		[TestMethod] public void Test_9() => Run(9);
+		[TestMethod] public void Test_10() => Run(10);
+		[TestMethod] public void Test_11() => Run(11);
+		[TestMethod] public void Test_12() => Run(12);
+		[TestMethod] public void Test_13() => Run(13);
 
 		private void Run(int testIndex)
 		{

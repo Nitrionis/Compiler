@@ -1,0 +1,13 @@
+public class Program {
+	public static string Foo() {
+		string i = "i";
+		string j = "j";
+		i = "i chenged ";
+		Console.Write(i);
+		return j;
+	}
+
+	public static void Main() {
+		Console.Write(Foo());
+	}
+}

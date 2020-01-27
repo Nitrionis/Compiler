@@ -1,0 +1,9 @@
+public class Program {
+	public static void Main() {
+		string i = "one";
+		string j = i;
+		i = "two";
+		Console.Write(i);
+		Console.Write(j);
+	}
+}

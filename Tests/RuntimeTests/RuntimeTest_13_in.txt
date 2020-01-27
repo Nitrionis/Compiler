@@ -1,0 +1,16 @@
+public class Program {
+	public string s = "Program instance default value\n";
+
+	public void Foo() {
+		Console.Write(s);
+	}
+
+	public static void Main() {
+		Program p1 = new Program();
+		Program p2 = new Program();
+		p2.s = "Program instance changed value\n";
+		p1.Foo();
+		p2.Foo();
+		Console.Write("Test 13\n");
+	}
+}

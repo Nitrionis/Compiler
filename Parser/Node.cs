@@ -209,7 +209,10 @@ namespace Parser
 			GetLogDecoration(indent, last).Prefix + string.Format(
 				" Method {0} {1}\n", TypeToString(Type), Method.Name);
 
-		public override TypeInstance Execute() => throw new InvalidOperationException();
+		public override TypeInstance Execute()
+		{
+			throw new InvalidOperationException();
+		}
 	}
 
 	public class VariableReference : Expression, IValue
@@ -629,13 +632,14 @@ namespace Parser
 			for (int i = 0; i < Parameters.Count; i++) {
 				parameters.Add(MethodInfo.Prams[i], Parameters[i].Execute());
 			}
-			if (Child is MemberAccess) {
-				var owner = (Expression)Child.Children[0];
-				Context.Push(new Context(owner.Execute().AsClass, parameters));
+			if (Child is MethodReference) {
+				Context.Push(new Context(Context.Current, parameters));
 			} else {
-				Context.Push(new Context(Child.Execute().AsClass, parameters));
+				var child = (Expression)Child.Children[0];
+				Context.Push(new Context(child.Execute().AsClass, parameters));
 			}
-			var res = MethodInfo.Body.Execute();
+			MethodInfo.Body.Execute();
+			var res = Return.Result;
 			Context.Pop();
 			return res;
 		}
@@ -756,6 +760,9 @@ namespace Parser
 			Stack.Push(this);
 			foreach (var s in Children) {
 				((IExecutable)s).Execute();
+				if (Return.Result != null) {
+					break;
+				}
 			}
 			Stack.Pop();
 			var context = Context.Current;
@@ -858,6 +865,9 @@ namespace Parser
 			Initializer?.Execute();
 			while ((bool)Condition.Execute().Value) {
 				BlockStatement.Execute();
+				if (Return.Result != null) {
+					break;
+				}
 				((IExecutable)Children[2]).Execute();
 			}
 			return null;
@@ -891,6 +901,9 @@ namespace Parser
 		{
 			while ((bool)Condition.Execute().Value) {
 				BlockStatement.Execute();
+				if (Return.Result != null) {
+					break;
+				}
 			}
 			return null;
 		}
@@ -918,6 +931,8 @@ namespace Parser
 
 	public class Return : Node, IStatement, ITypeProvider
 	{
+		public static TypeInstance Result = null;
+
 		public Expression Child { get => (Expression)Children[0]; set => Children[0] = value; }
 		public Type Type => Child?.Type;
 		public bool IsStatement => true;
@@ -951,7 +966,8 @@ namespace Parser
 
 		public TypeInstance Execute()
 		{
-			throw new NotImplementedException();
+			Result = Child.Execute();
+			return null;
 		}
 	}
 }

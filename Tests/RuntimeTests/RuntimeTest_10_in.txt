@@ -1,0 +1,14 @@
+public class Program {
+	public static void Main() {
+		if (false) {
+			Console.Write("Error\n");
+		} else if (false) {
+			Console.Write("Error\n");
+		} else if (false) {
+			Console.Write("Error\n");
+		} else if (true) {
+			Console.Write(" Done 1\n");
+		}
+		Console.Write(" Done 2\n");
+	}
+}
