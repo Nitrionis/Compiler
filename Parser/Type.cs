@@ -82,7 +82,7 @@ namespace Parser
 			bool isBoolean, 
 			TypeInfo parent = null, 
 			object defaultValue = null, 
-			Func<object, object, object> equalityTest = null)
+			Func<object, object, bool> equalityTest = null)
 		{
 			Name = name;
 			Parent = parent;
@@ -97,7 +97,7 @@ namespace Parser
 			IsBoolean = isBoolean;
 			DefaultValue = defaultValue;
 			StaticFields = new Dictionary<IVariable, TypeInstance>();
-			EqualityTest = ReferenceEquals;
+			EqualityTest = equalityTest ?? ReferenceEquals;
 		}
 
 		public bool ContainsMember(string identifier) =>

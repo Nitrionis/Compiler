@@ -1,0 +1,10 @@
+public class Program {
+	public static void Main() {
+		int i = 1 + 2 * (3 - 1);
+		if (i == 5) {
+			Console.Write("Done 5!\n");
+		} else {
+			Console.Write("Error!\n");
+		}
+	}
+}
